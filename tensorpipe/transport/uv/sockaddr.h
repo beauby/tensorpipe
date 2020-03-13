@@ -31,9 +31,7 @@ class Sockaddr final {
     return reinterpret_cast<struct sockaddr*>(&addr_);
   }
 
-  inline socklen_t addrlen() const {
-    return addrlen_;
-  }
+  inline socklen_t addrlen() const { return addrlen_; }
 
   std::string str() const;
 
@@ -42,6 +40,6 @@ class Sockaddr final {
   socklen_t addrlen_;
 };
 
-} // namespace uv
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace uv
+}  // namespace transport
+}  // namespace tensorpipe

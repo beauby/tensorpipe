@@ -35,6 +35,6 @@ TEST(Loop, Defer) {
   loop->join();
 }
 
-} // namespace uv
-} // namespace transport
-} // namespace test
+}  // namespace uv
+}  // namespace transport
+}  // namespace test

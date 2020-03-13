@@ -47,9 +47,7 @@ class ZeroCopyInputStream : public google::protobuf::io::ZeroCopyInputStream {
     return false;
   }
 
-  int64_t ByteCount() const override {
-    return bytesCount_;
-  }
+  int64_t ByteCount() const override { return bytesCount_; }
 
  private:
   Consumer* buffer_{nullptr};
@@ -80,9 +78,7 @@ class ZeroCopyOutputStream : public google::protobuf::io::ZeroCopyOutputStream {
     TP_THROW_ASSERT() << "BackUp() called from ZeroCopyOutputStream";
   }
 
-  int64_t ByteCount() const override {
-    return bytesCount_;
-  }
+  int64_t ByteCount() const override { return bytesCount_; }
 
  private:
   Producer* buffer_{nullptr};
@@ -90,6 +86,6 @@ class ZeroCopyOutputStream : public google::protobuf::io::ZeroCopyOutputStream {
   int64_t bytesCount_{0};
 };
 
-} // namespace ringbuffer
-} // namespace util
-} // namespace tensorpipe
+}  // namespace ringbuffer
+}  // namespace util
+}  // namespace tensorpipe

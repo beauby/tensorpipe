@@ -57,4 +57,4 @@ class EOFError final : public BaseError {
   std::string what() const override;
 };
 
-} // namespace tensorpipe
+}  // namespace tensorpipe

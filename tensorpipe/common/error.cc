@@ -21,4 +21,4 @@ std::string Error::what() const {
   return error_->what();
 }
 
-} // namespace tensorpipe
+}  // namespace tensorpipe

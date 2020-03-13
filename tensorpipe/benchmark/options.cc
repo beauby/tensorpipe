@@ -117,5 +117,5 @@ struct Options parseOptions(int argc, char** argv) {
   return options;
 }
 
-} // namespace benchmark
-} // namespace tensorpipe
+}  // namespace benchmark
+}  // namespace tensorpipe

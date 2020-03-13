@@ -46,4 +46,4 @@ class Queue {
   std::deque<T> items_;
 };
 
-} // namespace tensorpipe
+}  // namespace tensorpipe

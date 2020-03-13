@@ -55,9 +55,7 @@ class Error final {
   //     // Deal with it.
   //   }
   //
-  operator bool() const {
-    return static_cast<bool>(error_);
-  }
+  operator bool() const { return static_cast<bool>(error_); }
 
   // Like `std::exception` but returns a `std::string`.
   std::string what() const;
@@ -66,4 +64,4 @@ class Error final {
   std::shared_ptr<BaseError> error_;
 };
 
-} // namespace tensorpipe
+}  // namespace tensorpipe

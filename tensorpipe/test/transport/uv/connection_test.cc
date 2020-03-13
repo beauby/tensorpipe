@@ -23,11 +23,11 @@ TEST_P(TransportTest, LargeWrite) {
 
   this->testConnection(
       [&](std::shared_ptr<Connection> conn) {
-        this->doWrite(
-            conn, msg.c_str(), msg.length(), [&, conn](const Error& error) {
-              ASSERT_FALSE(error) << error.what();
-              writeCompletedProm.set_value();
-            });
+        this->doWrite(conn, msg.c_str(), msg.length(),
+                      [&, conn](const Error& error) {
+                        ASSERT_FALSE(error) << error.what();
+                        writeCompletedProm.set_value();
+                      });
         writeCompletedFuture.wait();
         readCompletedFuture.wait();
       },

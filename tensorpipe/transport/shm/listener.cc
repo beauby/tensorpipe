@@ -15,16 +15,13 @@ namespace tensorpipe {
 namespace transport {
 namespace shm {
 
-std::shared_ptr<Listener> Listener::create(
-    std::shared_ptr<Loop> loop,
-    const Sockaddr& addr) {
+std::shared_ptr<Listener> Listener::create(std::shared_ptr<Loop> loop,
+                                           const Sockaddr& addr) {
   return std::make_shared<Listener>(ConstructorToken(), std::move(loop), addr);
 }
 
-Listener::Listener(
-    ConstructorToken /* unused */,
-    std::shared_ptr<Loop> loop,
-    const Sockaddr& addr)
+Listener::Listener(ConstructorToken /* unused */, std::shared_ptr<Loop> loop,
+                   const Sockaddr& addr)
     : loop_(std::move(loop)),
       listener_(Socket::createForFamily(AF_UNIX)),
       addr_(addr) {
@@ -52,9 +49,7 @@ void Listener::accept(accept_callback_fn fn) {
   }
 }
 
-address_t Listener::addr() const {
-  return addr_.str();
-}
+address_t Listener::addr() const { return addr_.str(); }
 
 void Listener::handleEventsFromReactor(int events) {
   std::unique_lock<std::mutex> lock(mutex_);
@@ -78,6 +73,6 @@ void Listener::handleEventsFromReactor(int events) {
   }
 }
 
-} // namespace shm
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace shm
+}  // namespace transport
+}  // namespace tensorpipe

@@ -22,19 +22,17 @@ namespace tensorpipe {
 namespace transport {
 namespace shm {
 
-std::shared_ptr<Connection> Connection::create(
-    std::shared_ptr<Loop> loop,
-    std::shared_ptr<Socket> socket) {
-  auto conn = std::make_shared<Connection>(
-      ConstructorToken(), std::move(loop), std::move(socket));
+std::shared_ptr<Connection> Connection::create(std::shared_ptr<Loop> loop,
+                                               std::shared_ptr<Socket> socket) {
+  auto conn = std::make_shared<Connection>(ConstructorToken(), std::move(loop),
+                                           std::move(socket));
   conn->start();
   return conn;
 }
 
-Connection::Connection(
-    ConstructorToken /* unused */,
-    std::shared_ptr<Loop> loop,
-    std::shared_ptr<Socket> socket)
+Connection::Connection(ConstructorToken /* unused */,
+                       std::shared_ptr<Loop> loop,
+                       std::shared_ptr<Socket> socket)
     : loop_(std::move(loop)),
       reactor_(loop_->reactor()),
       socket_(std::move(socket)) {
@@ -43,9 +41,7 @@ Connection::Connection(
   socket_->block(false);
 }
 
-Connection::~Connection() {
-  close();
-}
+Connection::~Connection() { close(); }
 
 void Connection::start() {
   // Create ringbuffer for inbox.
@@ -82,9 +78,8 @@ void Connection::read(read_callback_fn fn) {
 }
 
 // Implementation of transport::Connection.
-void Connection::read(
-    google::protobuf::MessageLite& message,
-    read_proto_callback_fn fn) {
+void Connection::read(google::protobuf::MessageLite& message,
+                      read_proto_callback_fn fn) {
   std::unique_lock<std::mutex> guard(mutex_);
   readOperations_.emplace_back(
       [&message](util::ringbuffer::Consumer& inbox) -> ssize_t {
@@ -109,10 +104,8 @@ void Connection::read(
         TP_DCHECK_EQ(len, is.ByteCount());
         return is.ByteCount();
       },
-      [fn{std::move(fn)}](
-          const Error& error, const void* /* unused */, size_t /* unused */) {
-        fn(error);
-      });
+      [fn{std::move(fn)}](const Error& error, const void* /* unused */,
+                          size_t /* unused */) { fn(error); });
 
   // If there are pending read operations, make sure the event loop
   // processes them, now that we have an additional callback.
@@ -137,9 +130,8 @@ void Connection::write(const void* ptr, size_t length, write_callback_fn fn) {
 }
 
 // Implementation of transport::Connection
-void Connection::write(
-    const google::protobuf::MessageLite& message,
-    write_callback_fn fn) {
+void Connection::write(const google::protobuf::MessageLite& message,
+                       write_callback_fn fn) {
   std::unique_lock<std::mutex> guard(mutex_);
   writeOperations_.emplace_back(
       [&message](util::ringbuffer::Producer& outbox) -> ssize_t {
@@ -207,24 +199,20 @@ void Connection::handleEventInFromReactor(std::unique_lock<std::mutex> lock) {
 
     // Receive the reactor token, reactor fds, and inbox fds.
     auto err = socket_->recvPayloadAndFds(
-        peerInboxReactorToken,
-        peerOutboxReactorToken,
-        reactorHeaderFd,
-        reactorDataFd,
-        outboxHeaderFd,
-        outboxDataFd);
+        peerInboxReactorToken, peerOutboxReactorToken, reactorHeaderFd,
+        reactorDataFd, outboxHeaderFd, outboxDataFd);
     if (err) {
       failHoldingMutexFromReactor(std::move(err), lock);
       return;
     }
 
     // Load ringbuffer for outbox.
-    outbox_.emplace(util::ringbuffer::shm::load(
-        outboxHeaderFd.release(), outboxDataFd.release()));
+    outbox_.emplace(util::ringbuffer::shm::load(outboxHeaderFd.release(),
+                                                outboxDataFd.release()));
 
     // Initialize remote reactor trigger.
-    peerReactorTrigger_.emplace(
-        std::move(reactorHeaderFd), std::move(reactorDataFd));
+    peerReactorTrigger_.emplace(std::move(reactorHeaderFd),
+                                std::move(reactorDataFd));
 
     peerInboxReactorToken_ = peerInboxReactorToken;
     peerOutboxReactorToken_ = peerOutboxReactorToken;
@@ -261,12 +249,8 @@ void Connection::handleEventOutFromReactor(std::unique_lock<std::mutex> lock) {
 
     // Send our reactor token, reactor fds, and inbox fds.
     auto err = socket_->sendPayloadAndFds(
-        inboxReactorToken_.value(),
-        outboxReactorToken_.value(),
-        reactorHeaderFd,
-        reactorDataFd,
-        inboxHeaderFd_,
-        inboxDataFd_);
+        inboxReactorToken_.value(), outboxReactorToken_.value(),
+        reactorHeaderFd, reactorDataFd, inboxHeaderFd_, inboxDataFd_);
     if (err) {
       failHoldingMutexFromReactor(std::move(err), lock);
       return;
@@ -403,8 +387,7 @@ void Connection::setErrorHoldingMutexFromReactor(Error&& error) {
 }
 
 void Connection::failHoldingMutexFromReactor(
-    Error&& error,
-    std::unique_lock<std::mutex>& lock) {
+    Error&& error, std::unique_lock<std::mutex>& lock) {
   TP_DCHECK(loop_->inReactorThread());
   setErrorHoldingMutexFromReactor(std::move(error));
   while (!readOperations_.empty()) {
@@ -447,10 +430,8 @@ void Connection::closeHoldingMutex() {
   }
 }
 
-Connection::ReadOperation::ReadOperation(
-    void* ptr,
-    size_t len,
-    read_callback_fn fn)
+Connection::ReadOperation::ReadOperation(void* ptr, size_t len,
+                                         read_callback_fn fn)
     : ptr_(ptr), len_(len), fn_(std::move(fn)) {}
 
 Connection::ReadOperation::ReadOperation(read_fn reader, read_callback_fn fn)
@@ -543,15 +524,12 @@ void Connection::ReadOperation::handleError(const Error& error) {
   fn_(error, nullptr, 0);
 }
 
-Connection::WriteOperation::WriteOperation(
-    const void* ptr,
-    size_t len,
-    write_callback_fn fn)
+Connection::WriteOperation::WriteOperation(const void* ptr, size_t len,
+                                           write_callback_fn fn)
     : ptr_(ptr), len_(len), fn_(std::move(fn)) {}
 
-Connection::WriteOperation::WriteOperation(
-    write_fn writer,
-    write_callback_fn fn)
+Connection::WriteOperation::WriteOperation(write_fn writer,
+                                           write_callback_fn fn)
     : writer_(std::move(writer)), fn_(std::move(fn)) {}
 
 bool Connection::WriteOperation::handleWrite(
@@ -611,10 +589,8 @@ bool Connection::WriteOperation::handleWrite(
   return true;
 }
 
-void Connection::WriteOperation::handleError(const Error& error) {
-  fn_(error);
-}
+void Connection::WriteOperation::handleError(const Error& error) { fn_(error); }
 
-} // namespace shm
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace shm
+}  // namespace transport
+}  // namespace tensorpipe

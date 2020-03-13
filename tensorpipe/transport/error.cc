@@ -39,4 +39,4 @@ std::string EOFError::what() const {
   return ss.str();
 }
 
-} // namespace tensorpipe
+}  // namespace tensorpipe

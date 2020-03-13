@@ -15,18 +15,16 @@
 namespace tensorpipe {
 
 std::shared_ptr<Listener> Listener::create(
-    std::shared_ptr<Context> context,
-    const std::vector<std::string>& urls) {
+    std::shared_ptr<Context> context, const std::vector<std::string>& urls) {
   auto listener =
       std::make_shared<Listener>(ConstructorToken(), std::move(context), urls);
   listener->start_();
   return listener;
 }
 
-Listener::Listener(
-    ConstructorToken /* unused */,
-    std::shared_ptr<Context> context,
-    const std::vector<std::string>& urls)
+Listener::Listener(ConstructorToken /* unused */,
+                   std::shared_ptr<Context> context,
+                   const std::vector<std::string>& urls)
     : context_(std::move(context)),
       readPacketCallbackWrapper_(*this),
       acceptCallbackWrapper_(*this) {
@@ -60,36 +58,24 @@ void Listener::accept(accept_callback_fn fn) {
   std::unique_lock<std::mutex> lock(mutex_);
 
   if (error_) {
-    triggerAcceptCallback_(
-        std::move(fn),
-        error_,
-        std::string(),
-        std::shared_ptr<transport::Connection>(),
-        lock);
+    triggerAcceptCallback_(std::move(fn), error_, std::string(),
+                           std::shared_ptr<transport::Connection>(), lock);
     return;
   }
 
   acceptCallback_.arm(
       runIfAlive(
           *this,
-          std::function<void(
-              Listener&,
-              const Error&,
-              std::string,
-              std::shared_ptr<transport::Connection>,
-              TLock)>([fn{std::move(fn)}](
-                          Listener& listener,
-                          const Error& error,
-                          std::string transport,
-                          std::shared_ptr<transport::Connection> connection,
-                          TLock lock) mutable {
-            listener.triggerAcceptCallback_(
-                std::move(fn),
-                error,
-                std::move(transport),
-                std::move(connection),
-                lock);
-          })),
+          std::function<void(Listener&, const Error&, std::string,
+                             std::shared_ptr<transport::Connection>, TLock)>(
+              [fn{std::move(fn)}](
+                  Listener& listener, const Error& error, std::string transport,
+                  std::shared_ptr<transport::Connection> connection,
+                  TLock lock) mutable {
+                listener.triggerAcceptCallback_(std::move(fn), error,
+                                                std::move(transport),
+                                                std::move(connection), lock);
+              })),
       lock);
 }
 
@@ -121,12 +107,9 @@ uint64_t Listener::registerConnectionRequest_(
 
   uint64_t registrationId = nextConnectionRequestRegistrationId_++;
   if (error_) {
-    triggerConnectionRequestCallback_(
-        std::move(fn),
-        error_,
-        std::string(),
-        std::shared_ptr<transport::Connection>(),
-        lock);
+    triggerConnectionRequestCallback_(std::move(fn), error_, std::string(),
+                                      std::shared_ptr<transport::Connection>(),
+                                      lock);
   } else {
     connectionRequestRegistrations_.emplace(registrationId, std::move(fn));
   }
@@ -143,23 +126,17 @@ void Listener::unregisterConnectionRequest_(uint64_t registrationId) {
 //
 
 void Listener::triggerAcceptCallback_(
-    accept_callback_fn fn,
-    const Error& error,
-    std::string transport,
-    std::shared_ptr<transport::Connection> connection,
-    TLock lock) {
+    accept_callback_fn fn, const Error& error, std::string transport,
+    std::shared_ptr<transport::Connection> connection, TLock lock) {
   TP_DCHECK(lock.owns_lock() && lock.mutex() == &mutex_);
   lock.unlock();
   // Create the pipe here, without holding the lock, as otherwise TSAN would
   // report a false positive lock order inversion.
   std::shared_ptr<Pipe> pipe;
   if (!error) {
-    pipe = std::make_shared<Pipe>(
-        Pipe::ConstructorToken(),
-        context_,
-        shared_from_this(),
-        std::move(transport),
-        std::move(connection));
+    pipe = std::make_shared<Pipe>(Pipe::ConstructorToken(), context_,
+                                  shared_from_this(), std::move(transport),
+                                  std::move(connection));
     pipe->start_();
   }
   fn(error, std::move(pipe));
@@ -167,10 +144,8 @@ void Listener::triggerAcceptCallback_(
 }
 
 void Listener::triggerConnectionRequestCallback_(
-    connection_request_callback_fn fn,
-    const Error& error,
-    std::string transport,
-    std::shared_ptr<transport::Connection> connection,
+    connection_request_callback_fn fn, const Error& error,
+    std::string transport, std::shared_ptr<transport::Connection> connection,
     TLock lock) {
   TP_DCHECK(lock.owns_lock() && lock.mutex() == &mutex_);
   lock.unlock();
@@ -187,18 +162,15 @@ void Listener::handleError_(TLock lock) {
 
   acceptCallback_.triggerAll(
       [&]() {
-        return std::make_tuple(
-            error_, std::string(), std::shared_ptr<transport::Connection>());
+        return std::make_tuple(error_, std::string(),
+                               std::shared_ptr<transport::Connection>());
       },
       lock);
   for (auto& iter : connectionRequestRegistrations_) {
     connection_request_callback_fn fn = std::move(iter.second);
-    triggerConnectionRequestCallback_(
-        std::move(fn),
-        error_,
-        std::string(),
-        std::shared_ptr<transport::Connection>(),
-        lock);
+    triggerConnectionRequestCallback_(std::move(fn), error_, std::string(),
+                                      std::shared_ptr<transport::Connection>(),
+                                      lock);
   }
   connectionRequestRegistrations_.clear();
 }
@@ -207,10 +179,9 @@ void Listener::handleError_(TLock lock) {
 // Everything else
 //
 
-void Listener::onAccept_(
-    std::string transport,
-    std::shared_ptr<transport::Connection> connection,
-    TLock lock) {
+void Listener::onAccept_(std::string transport,
+                         std::shared_ptr<transport::Connection> connection,
+                         TLock lock) {
   TP_DCHECK(lock.owns_lock() && lock.mutex() == &mutex_);
   // Keep it alive until we figure out what to do with it.
   connectionsWaitingForHello_.insert(connection);
@@ -218,8 +189,7 @@ void Listener::onAccept_(
   connection->read(
       *pbPacketIn,
       readPacketCallbackWrapper_(
-          [pbPacketIn,
-           transport{std::move(transport)},
+          [pbPacketIn, transport{std::move(transport)},
            weakConnection{std::weak_ptr<transport::Connection>(connection)}](
               Listener& listener, TLock lock) mutable {
             std::shared_ptr<transport::Connection> connection =
@@ -239,40 +209,34 @@ void Listener::armListener_(std::string transport, TLock lock) {
   }
   auto transportListener = iter->second;
   transportListener->accept(acceptCallbackWrapper_(
-      [transport](
-          Listener& listener,
-          std::shared_ptr<transport::Connection> connection,
-          TLock lock) {
+      [transport](Listener& listener,
+                  std::shared_ptr<transport::Connection> connection,
+                  TLock lock) {
         listener.onAccept_(transport, std::move(connection), lock);
         listener.armListener_(transport, lock);
       }));
 }
 
 void Listener::onConnectionHelloRead_(
-    std::string transport,
-    std::shared_ptr<transport::Connection> connection,
-    const proto::Packet& pbPacketIn,
-    TLock lock) {
+    std::string transport, std::shared_ptr<transport::Connection> connection,
+    const proto::Packet& pbPacketIn, TLock lock) {
   TP_DCHECK(lock.owns_lock() && lock.mutex() == &mutex_);
   if (pbPacketIn.has_spontaneous_connection()) {
-    acceptCallback_.trigger(
-        Error::kSuccess, std::move(transport), std::move(connection), lock);
+    acceptCallback_.trigger(Error::kSuccess, std::move(transport),
+                            std::move(connection), lock);
   } else if (pbPacketIn.has_requested_connection()) {
     const proto::RequestedConnection& pbRequestedConnection =
         pbPacketIn.requested_connection();
     uint64_t registrationId = pbRequestedConnection.registration_id();
     auto fn = std::move(connectionRequestRegistrations_.at(registrationId));
     connectionRequestRegistrations_.erase(registrationId);
-    triggerConnectionRequestCallback_(
-        std::move(fn),
-        Error::kSuccess,
-        std::move(transport),
-        std::move(connection),
-        lock);
+    triggerConnectionRequestCallback_(std::move(fn), Error::kSuccess,
+                                      std::move(transport),
+                                      std::move(connection), lock);
   } else {
     TP_LOG_ERROR() << "packet contained unknown content: "
                    << pbPacketIn.type_case();
   }
 }
 
-} // namespace tensorpipe
+}  // namespace tensorpipe

@@ -17,7 +17,5 @@ class BasicChannelTestHelper : public ChannelTestHelper {
     return std::make_shared<tensorpipe::channel::basic::BasicChannelFactory>();
   }
 
-  std::string getName() override {
-    return "basic";
-  }
+  std::string getName() override { return "basic"; }
 };

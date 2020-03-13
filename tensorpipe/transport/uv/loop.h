@@ -74,9 +74,7 @@ class Loop final : public std::enable_shared_from_this<Loop> {
     return std::this_thread::get_id() == thread_.get_id();
   }
 
-  uv_loop_t* ptr() {
-    return loop_.get();
-  }
+  uv_loop_t* ptr() { return loop_.get(); }
 
  private:
   std::mutex mutex_;
@@ -106,6 +104,6 @@ class Loop final : public std::enable_shared_from_this<Loop> {
   static void closeOneHandleFromLoop(uv_handle_t* handle, void* /* unused */);
 };
 
-} // namespace uv
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace uv
+}  // namespace transport
+}  // namespace tensorpipe

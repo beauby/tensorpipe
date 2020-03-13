@@ -32,8 +32,8 @@ Sockaddr TCPHandle::sockNameFromLoop() {
   TP_DCHECK(this->loop_->inLoopThread());
   struct sockaddr_storage addr;
   int addrlen = sizeof(addr);
-  auto rv = uv_tcp_getsockname(
-      ptr(), reinterpret_cast<struct sockaddr*>(&addr), &addrlen);
+  auto rv = uv_tcp_getsockname(ptr(), reinterpret_cast<struct sockaddr*>(&addr),
+                               &addrlen);
   TP_THROW_UV_IF(rv < 0, rv);
   return Sockaddr(addr, addrlen);
 }
@@ -43,9 +43,8 @@ void TCPHandle::connectFromLoop(const Sockaddr& addr) {
   connectFromLoop(addr, [](int status) {});
 }
 
-void TCPHandle::connectFromLoop(
-    const Sockaddr& addr,
-    ConnectRequest::TConnectCallback fn) {
+void TCPHandle::connectFromLoop(const Sockaddr& addr,
+                                ConnectRequest::TConnectCallback fn) {
   TP_DCHECK(this->loop_->inLoopThread());
   auto request = ConnectRequest::create(loop_, std::move(fn));
   auto rv =
@@ -53,6 +52,6 @@ void TCPHandle::connectFromLoop(
   TP_THROW_UV_IF(rv < 0, rv);
 }
 
-} // namespace uv
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace uv
+}  // namespace transport
+}  // namespace tensorpipe

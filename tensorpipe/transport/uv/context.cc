@@ -21,20 +21,16 @@ namespace {
 // disambiguate descriptors when debugging.
 const std::string kDomainDescriptorPrefix{"uv:"};
 
-std::string generateDomainDescriptor() {
-  return kDomainDescriptorPrefix + "*";
-}
+std::string generateDomainDescriptor() { return kDomainDescriptorPrefix + "*"; }
 
-} // namespace
+}  // namespace
 
 Context::Context()
     : loop_(Loop::create()), domainDescriptor_(generateDomainDescriptor()) {}
 
 Context::~Context() {}
 
-void Context::join() {
-  loop_->join();
-}
+void Context::join() { loop_->join(); }
 
 std::shared_ptr<transport::Connection> Context::connect(address_t addr) {
   return Connection::create_(loop_, Sockaddr::createInetSockAddr(addr));
@@ -48,6 +44,6 @@ const std::string& Context::domainDescriptor() const {
   return domainDescriptor_;
 }
 
-} // namespace uv
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace uv
+}  // namespace transport
+}  // namespace tensorpipe

@@ -31,10 +31,8 @@ class Listener : public transport::Listener,
   struct ConstructorToken {};
 
  public:
-  Listener(
-      ConstructorToken,
-      std::shared_ptr<Loop> loop,
-      std::shared_ptr<TCPHandle> handle);
+  Listener(ConstructorToken, std::shared_ptr<Loop> loop,
+           std::shared_ptr<TCPHandle> handle);
 
   ~Listener() override;
 
@@ -46,9 +44,8 @@ class Listener : public transport::Listener,
 
  private:
   // Create a listener that listens on the specified address.
-  static std::shared_ptr<Listener> create_(
-      std::shared_ptr<Loop> loop,
-      const Sockaddr& addr);
+  static std::shared_ptr<Listener> create_(std::shared_ptr<Loop> loop,
+                                           const Sockaddr& addr);
 
   // Called to initialize member fields that need `shared_from_this`.
   void init_();
@@ -67,6 +64,6 @@ class Listener : public transport::Listener,
   friend class Context;
 };
 
-} // namespace uv
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace uv
+}  // namespace transport
+}  // namespace tensorpipe

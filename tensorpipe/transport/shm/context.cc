@@ -28,16 +28,14 @@ std::string generateDomainDescriptor() {
   return kDomainDescriptorPrefix + bootID.value();
 }
 
-} // namespace
+}  // namespace
 
 Context::Context()
     : loop_(Loop::create()), domainDescriptor_(generateDomainDescriptor()) {}
 
 Context::~Context() {}
 
-void Context::join() {
-  loop_->join();
-}
+void Context::join() { loop_->join(); }
 
 std::shared_ptr<transport::Connection> Context::connect(address_t addr) {
   auto sockaddr = Sockaddr::createAbstractUnixAddr(addr);
@@ -55,6 +53,6 @@ const std::string& Context::domainDescriptor() const {
   return domainDescriptor_;
 }
 
-} // namespace shm
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace shm
+}  // namespace transport
+}  // namespace tensorpipe

@@ -39,9 +39,7 @@ class Consumer : public RingBufferWrapper {
   // Only one writer can have an active transaction at any time.
   // *InTx* operations that fail do not cancel transaction.
   //
-  bool inTx() const noexcept {
-    return this->inTx_;
-  }
+  bool inTx() const noexcept { return this->inTx_; }
 
   [[nodiscard]] ssize_t startTx() noexcept {
     if (unlikely(inTx())) {
@@ -98,9 +96,8 @@ class Consumer : public RingBufferWrapper {
   }
 
   // Copy up to the next <size> bytes to buffer.
-  [[nodiscard]] ssize_t copyAtMostInTx(
-      const size_t size,
-      uint8_t* buffer) noexcept {
+  [[nodiscard]] ssize_t copyAtMostInTx(const size_t size,
+                                       uint8_t* buffer) noexcept {
     if (unlikely(!inTx())) {
       return -EINVAL;
     }
@@ -122,8 +119,8 @@ class Consumer : public RingBufferWrapper {
     const uint64_t tail = this->header_.readTail();
     const uint64_t start = (this->tx_size_ + tail) & this->header_.kDataModMask;
     const size_t avail = head - tail - this->tx_size_;
-    const uint64_t end = std::min(
-        start + std::min(size, avail), this->header_.kDataPoolByteSize);
+    const uint64_t end = std::min(start + std::min(size, avail),
+                                  this->header_.kDataPoolByteSize);
 
     this->tx_size_ += end - start;
 
@@ -159,9 +156,8 @@ class Consumer : public RingBufferWrapper {
 
   /// Returns a ptr to data (or null if no data available).
   /// If succeeds, increases <tx_size_> by size.
-  const uint8_t* readFromRingBuffer_(
-      const size_t size,
-      uint8_t* copy_buffer) noexcept {
+  const uint8_t* readFromRingBuffer_(const size_t size,
+                                     uint8_t* copy_buffer) noexcept {
     // Caller must have taken care of this.
     TP_DCHECK_LE(size, this->header_.kDataPoolByteSize);
 
@@ -206,6 +202,6 @@ class Consumer : public RingBufferWrapper {
   }
 };
 
-} // namespace ringbuffer
-} // namespace util
-} // namespace tensorpipe
+}  // namespace ringbuffer
+}  // namespace util
+}  // namespace tensorpipe

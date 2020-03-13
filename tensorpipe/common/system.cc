@@ -45,10 +45,9 @@ optional<std::string> getProcFsStr(const std::string& file_name, pid_t tid) {
 
 std::string removeBlankSpaces(std::string s) {
   // Remove blanks.
-  s.erase(
-      std::remove_if(
-          s.begin(), s.end(), [](unsigned char c) { return std::isspace(c); }),
-      s.end());
+  s.erase(std::remove_if(s.begin(), s.end(),
+                         [](unsigned char c) { return std::isspace(c); }),
+          s.end());
   return s;
 }
 
@@ -63,4 +62,4 @@ optional<std::string> getBootID() {
   return v;
 }
 
-} // namespace tensorpipe
+}  // namespace tensorpipe

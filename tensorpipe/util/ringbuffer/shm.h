@@ -35,12 +35,11 @@ std::tuple<int, int, std::shared_ptr<RingBuffer>> create(
     bool perm_write = true);
 
 std::shared_ptr<RingBuffer> load(
-    int header_fd,
-    int data_fd,
+    int header_fd, int data_fd,
     optional<tensorpipe::util::shm::PageType> data_page_type = nullopt,
     bool perm_write = true);
 
-} // namespace shm
-} // namespace ringbuffer
-} // namespace util
-} // namespace tensorpipe
+}  // namespace shm
+}  // namespace ringbuffer
+}  // namespace util
+}  // namespace tensorpipe

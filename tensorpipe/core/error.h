@@ -31,4 +31,4 @@ class PipeClosedError final : public BaseError {
   std::string what() const override;
 };
 
-} // namespace tensorpipe
+}  // namespace tensorpipe

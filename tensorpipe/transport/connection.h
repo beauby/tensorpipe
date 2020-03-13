@@ -46,9 +46,8 @@ class Connection {
   //
   using read_proto_callback_fn = std::function<void(const Error& error)>;
 
-  virtual void read(
-      google::protobuf::MessageLite& message,
-      read_proto_callback_fn fn);
+  virtual void read(google::protobuf::MessageLite& message,
+                    read_proto_callback_fn fn);
 
   // Serialize and write protobuf message.
   //
@@ -58,10 +57,9 @@ class Connection {
   // into a temporary buffer and instead instead serialize directly into
   // its peer's ring buffer. This saves an allocation and a memory copy.
   //
-  virtual void write(
-      const google::protobuf::MessageLite& message,
-      write_callback_fn fn);
+  virtual void write(const google::protobuf::MessageLite& message,
+                     write_callback_fn fn);
 };
 
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace transport
+}  // namespace tensorpipe

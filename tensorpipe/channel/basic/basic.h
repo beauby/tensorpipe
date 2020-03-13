@@ -27,9 +27,8 @@ class BasicChannelFactory : public ChannelFactory {
 
   const std::string& domainDescriptor() const override;
 
-  std::shared_ptr<Channel> createChannel(
-      std::shared_ptr<transport::Connection>,
-      Channel::Endpoint) override;
+  std::shared_ptr<Channel> createChannel(std::shared_ptr<transport::Connection>,
+                                         Channel::Endpoint) override;
 
  private:
   std::string domainDescriptor_;
@@ -42,20 +41,16 @@ class BasicChannel : public Channel,
   struct ConstructorToken {};
 
  public:
-  BasicChannel(
-      ConstructorToken,
-      std::shared_ptr<transport::Connection> connection);
+  BasicChannel(ConstructorToken,
+               std::shared_ptr<transport::Connection> connection);
 
   // Send memory region to peer.
-  TDescriptor send(const void* ptr, size_t length, TSendCallback callback)
-      override;
+  TDescriptor send(const void* ptr, size_t length,
+                   TSendCallback callback) override;
 
   // Receive memory region from peer.
-  void recv(
-      TDescriptor descriptor,
-      void* ptr,
-      size_t length,
-      TRecvCallback callback) override;
+  void recv(TDescriptor descriptor, void* ptr, size_t length,
+            TRecvCallback callback) override;
 
  private:
   // Each time a thread starts running some of the channel's code, we acquire
@@ -131,6 +126,6 @@ class BasicChannel : public Channel,
   friend class tensorpipe::CallbackWrapper;
 };
 
-} // namespace basic
-} // namespace channel
-} // namespace tensorpipe
+}  // namespace basic
+}  // namespace channel
+}  // namespace tensorpipe

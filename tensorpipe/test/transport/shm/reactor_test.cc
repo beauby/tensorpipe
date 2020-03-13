@@ -47,7 +47,7 @@ void run(std::function<void(int)> fn1, std::function<void(int)> fn2) {
   wait(nullptr);
 }
 
-} // namespace
+}  // namespace
 
 TEST(Reactor, Basic) {
   run(

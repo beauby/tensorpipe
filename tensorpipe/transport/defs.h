@@ -15,5 +15,5 @@ namespace transport {
 
 using address_t = std::string;
 
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace transport
+}  // namespace tensorpipe

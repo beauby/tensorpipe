@@ -12,11 +12,9 @@
 namespace {
 
 struct Initializer {
-  explicit Initializer() {
-    signal(SIGPIPE, SIG_IGN);
-  }
+  explicit Initializer() { signal(SIGPIPE, SIG_IGN); }
 };
 
 Initializer initializer;
 
-} // namespace
+}  // namespace

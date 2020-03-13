@@ -33,9 +33,7 @@ class Producer : public RingBufferWrapper {
   // Only one writer can have an active transaction at any time.
   // *InTx* operations that fail do not cancel transaction.
   //
-  bool inTx() const noexcept {
-    return this->inTx_;
-  }
+  bool inTx() const noexcept { return this->inTx_; }
 
   [[nodiscard]] ssize_t startTx() {
     if (unlikely(inTx())) {
@@ -49,7 +47,7 @@ class Producer : public RingBufferWrapper {
     return 0;
   }
 
-  [[nodiscard]] ssize_t commitTx() noexcept {
+      [[nodiscard]] ssize_t commitTx() noexcept {
     if (unlikely(!inTx())) {
       return -EINVAL;
     }
@@ -100,9 +98,8 @@ class Producer : public RingBufferWrapper {
     return this->copyToRingBuffer_(static_cast<const uint8_t*>(data), size);
   }
 
-  [[nodiscard]] ssize_t writeAtMostInTx(
-      size_t size,
-      const void* data) noexcept {
+  [[nodiscard]] ssize_t writeAtMostInTx(size_t size,
+                                        const void* data) noexcept {
     if (unlikely(!inTx())) {
       return -EINVAL;
     }
@@ -162,14 +159,12 @@ class Producer : public RingBufferWrapper {
     return {end - start, &this->data_[start]};
   }
 
- protected:
-  bool inTx_{false};
+  protected : bool inTx_{false};
 
   // Return 0 if succeded, otherwise return negative error code.
   // If successful, increases tx_size_ by size.
-  [[nodiscard]] ssize_t copyToRingBuffer_(
-      const uint8_t* d,
-      const size_t size) noexcept {
+  [[nodiscard]] ssize_t copyToRingBuffer_(const uint8_t* d,
+                                          const size_t size) noexcept {
     TP_THROW_IF_NULLPTR(d);
 
     if (unlikely(size == 0)) {
@@ -218,6 +213,6 @@ class Producer : public RingBufferWrapper {
   }
 };
 
-} // namespace ringbuffer
-} // namespace util
-} // namespace tensorpipe
+}  // namespace ringbuffer
+}  // namespace util
+}  // namespace tensorpipe

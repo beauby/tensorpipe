@@ -15,14 +15,12 @@ namespace shm {
 
 std::tuple<int, int, std::shared_ptr<RingBuffer>> create(
     size_t min_rb_byte_size,
-    optional<tensorpipe::util::shm::PageType> data_page_type,
-    bool perm_write) {
+    optional<tensorpipe::util::shm::PageType> data_page_type, bool perm_write) {
   std::shared_ptr<RingBufferHeader> header;
   std::shared_ptr<tensorpipe::util::shm::Segment> header_segment;
   std::tie(header, header_segment) =
       tensorpipe::util::shm::Segment::create<RingBufferHeader>(
-          perm_write,
-          tensorpipe::util::shm::PageType::Default,
+          perm_write, tensorpipe::util::shm::PageType::Default,
           min_rb_byte_size);
 
   std::shared_ptr<uint8_t> data;
@@ -34,16 +32,13 @@ std::tuple<int, int, std::shared_ptr<RingBuffer>> create(
   // Note: cannot use implicit construction from initializer list on GCC 5.5:
   // "converting to XYZ from initializer list would use explicit constructor".
   return std::make_tuple(
-      header_segment->getFd(),
-      data_segment->getFd(),
+      header_segment->getFd(), data_segment->getFd(),
       std::make_shared<RingBuffer>(std::move(header), std::move(data)));
 }
 
 std::shared_ptr<RingBuffer> load(
-    int header_fd,
-    int data_fd,
-    optional<tensorpipe::util::shm::PageType> data_page_type,
-    bool perm_write) {
+    int header_fd, int data_fd,
+    optional<tensorpipe::util::shm::PageType> data_page_type, bool perm_write) {
   std::shared_ptr<RingBufferHeader> header;
   std::shared_ptr<tensorpipe::util::shm::Segment> header_segment;
   std::tie(header, header_segment) =
@@ -57,8 +52,8 @@ std::shared_ptr<RingBuffer> load(
   std::shared_ptr<uint8_t> data;
   std::shared_ptr<tensorpipe::util::shm::Segment> data_segment;
   std::tie(data, data_segment) =
-      tensorpipe::util::shm::Segment::load<uint8_t[]>(
-          data_fd, perm_write, data_page_type);
+      tensorpipe::util::shm::Segment::load<uint8_t[]>(data_fd, perm_write,
+                                                      data_page_type);
   if (unlikely(header->kDataPoolByteSize != data_segment->getSize())) {
     TP_THROW_SYSTEM(EPERM) << "Data segment of unexpected size";
   }
@@ -66,7 +61,7 @@ std::shared_ptr<RingBuffer> load(
   return std::make_shared<RingBuffer>(std::move(header), std::move(data));
 }
 
-} // namespace shm
-} // namespace ringbuffer
-} // namespace util
-} // namespace tensorpipe
+}  // namespace shm
+}  // namespace ringbuffer
+}  // namespace util
+}  // namespace tensorpipe

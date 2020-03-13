@@ -122,6 +122,6 @@ std::string Sockaddr::str() const {
   return oss.str();
 }
 
-} // namespace uv
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace uv
+}  // namespace transport
+}  // namespace tensorpipe

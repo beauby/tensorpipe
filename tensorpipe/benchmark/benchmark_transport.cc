@@ -11,7 +11,7 @@
 #include <tensorpipe/common/defs.h>
 #ifdef TP_ENABLE_SHM
 #include <tensorpipe/transport/shm/context.h>
-#endif // TP_ENABLE_SHM
+#endif  // TP_ENABLE_SHM
 #include <tensorpipe/transport/uv/context.h>
 
 using namespace tensorpipe;
@@ -26,26 +26,15 @@ struct Data {
 
 static void printMeasurements(Measurements& measurements, size_t dataLen) {
   measurements.sort();
-  fprintf(
-      stderr,
-      "%-15s %-15s %-12s %-7s %-7s %-7s %-7s\n",
-      "chunk-size",
-      "# ping-pong",
-      "avg (usec)",
-      "p50",
-      "p75",
-      "p90",
-      "p95");
-  fprintf(
-      stderr,
-      "%-15lu %-15lu %-12.3f %-7.3f %-7.3f %-7.3f %-7.3f\n",
-      dataLen,
-      measurements.size(),
-      measurements.sum().count() / (float)measurements.size() / 1000.0,
-      measurements.percentile(0.50).count() / 1000.0,
-      measurements.percentile(0.75).count() / 1000.0,
-      measurements.percentile(0.90).count() / 1000.0,
-      measurements.percentile(0.95).count() / 1000.0);
+  fprintf(stderr, "%-15s %-15s %-12s %-7s %-7s %-7s %-7s\n", "chunk-size",
+          "# ping-pong", "avg (usec)", "p50", "p75", "p90", "p95");
+  fprintf(stderr, "%-15lu %-15lu %-12.3f %-7.3f %-7.3f %-7.3f %-7.3f\n",
+          dataLen, measurements.size(),
+          measurements.sum().count() / (float)measurements.size() / 1000.0,
+          measurements.percentile(0.50).count() / 1000.0,
+          measurements.percentile(0.75).count() / 1000.0,
+          measurements.percentile(0.90).count() / 1000.0,
+          measurements.percentile(0.95).count() / 1000.0);
 }
 
 static std::unique_ptr<uint8_t[]> createData(const int chunkBytes) {
@@ -57,35 +46,28 @@ static std::unique_ptr<uint8_t[]> createData(const int chunkBytes) {
   return data;
 }
 
-static void serverPongPingNonBlock(
-    std::shared_ptr<Connection> conn,
-    int& ioNum,
-    std::promise<void>& doneProm,
-    Data& data,
-    Measurements& measurements) {
-  conn->read(
-      data.temporary.get(),
-      data.len,
-      [conn, &ioNum, &doneProm, &data, &measurements](
-          const Error& error, const void* ptr, size_t len) {
-        TP_THROW_ASSERT_IF(error) << error.what();
-        TP_DCHECK_EQ(len, data.len);
-        int cmp = memcmp(ptr, data.expected.get(), len);
-        TP_DCHECK_EQ(cmp, 0);
-        conn->write(
-            data.temporary.get(),
-            data.len,
-            [conn, &ioNum, &doneProm, &data, &measurements](
-                const Error& error) {
-              TP_THROW_ASSERT_IF(error) << error.what();
-              if (--ioNum > 0) {
-                serverPongPingNonBlock(
-                    conn, ioNum, doneProm, data, measurements);
-              } else {
-                doneProm.set_value();
-              }
-            });
-      });
+static void serverPongPingNonBlock(std::shared_ptr<Connection> conn, int& ioNum,
+                                   std::promise<void>& doneProm, Data& data,
+                                   Measurements& measurements) {
+  conn->read(data.temporary.get(), data.len,
+             [conn, &ioNum, &doneProm, &data, &measurements](
+                 const Error& error, const void* ptr, size_t len) {
+               TP_THROW_ASSERT_IF(error) << error.what();
+               TP_DCHECK_EQ(len, data.len);
+               int cmp = memcmp(ptr, data.expected.get(), len);
+               TP_DCHECK_EQ(cmp, 0);
+               conn->write(data.temporary.get(), data.len,
+                           [conn, &ioNum, &doneProm, &data,
+                            &measurements](const Error& error) {
+                             TP_THROW_ASSERT_IF(error) << error.what();
+                             if (--ioNum > 0) {
+                               serverPongPingNonBlock(conn, ioNum, doneProm,
+                                                      data, measurements);
+                             } else {
+                               doneProm.set_value();
+                             }
+                           });
+             });
 }
 
 // Start with receiving ping
@@ -103,7 +85,7 @@ static void runServer(const Options& options) {
   if (options.transport == "shm") {
     context = std::make_shared<shm::Context>();
   } else
-#endif // TP_ENABLE_SHM
+#endif  // TP_ENABLE_SHM
       if (options.transport == "uv") {
     context = std::make_shared<uv::Context>();
   } else {
@@ -126,36 +108,30 @@ static void runServer(const Options& options) {
   context->join();
 }
 
-static void clientPingPongNonBlock(
-    std::shared_ptr<Connection> conn,
-    int& ioNum,
-    std::promise<void>& doneProm,
-    Data& data,
-    Measurements& measurements) {
+static void clientPingPongNonBlock(std::shared_ptr<Connection> conn, int& ioNum,
+                                   std::promise<void>& doneProm, Data& data,
+                                   Measurements& measurements) {
   measurements.markStart();
   conn->write(
-      data.expected.get(),
-      data.len,
+      data.expected.get(), data.len,
       [conn, &ioNum, &doneProm, &data, &measurements](const Error& error) {
         TP_THROW_ASSERT_IF(error) << error.what();
-        conn->read(
-            data.temporary.get(),
-            data.len,
-            [conn, &ioNum, &doneProm, &data, &measurements](
-                const Error& error, const void* ptr, size_t len) {
-              measurements.markStop();
-              TP_THROW_ASSERT_IF(error) << error.what();
-              TP_DCHECK_EQ(len, data.len);
-              int cmp = memcmp(ptr, data.expected.get(), len);
-              TP_DCHECK_EQ(cmp, 0);
-              if (--ioNum > 0) {
-                clientPingPongNonBlock(
-                    conn, ioNum, doneProm, data, measurements);
-              } else {
-                printMeasurements(measurements, data.len);
-                doneProm.set_value();
-              }
-            });
+        conn->read(data.temporary.get(), data.len,
+                   [conn, &ioNum, &doneProm, &data, &measurements](
+                       const Error& error, const void* ptr, size_t len) {
+                     measurements.markStop();
+                     TP_THROW_ASSERT_IF(error) << error.what();
+                     TP_DCHECK_EQ(len, data.len);
+                     int cmp = memcmp(ptr, data.expected.get(), len);
+                     TP_DCHECK_EQ(cmp, 0);
+                     if (--ioNum > 0) {
+                       clientPingPongNonBlock(conn, ioNum, doneProm, data,
+                                              measurements);
+                     } else {
+                       printMeasurements(measurements, data.len);
+                       doneProm.set_value();
+                     }
+                   });
       });
 }
 
@@ -174,7 +150,7 @@ static void runClient(const Options& options) {
   if (options.transport == "shm") {
     context = std::make_shared<shm::Context>();
   } else
-#endif // TP_ENABLE_SHM
+#endif  // TP_ENABLE_SHM
       if (options.transport == "uv") {
     context = std::make_shared<uv::Context>();
   } else {

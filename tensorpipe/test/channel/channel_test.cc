@@ -37,8 +37,8 @@ TEST_P(ChannelTest, ClientToServer) {
 
   testConnectionPair(
       [&](std::shared_ptr<transport::Connection> conn) {
-        auto channel = factory1->createChannel(
-            std::move(conn), Channel::Endpoint::kListen);
+        auto channel = factory1->createChannel(std::move(conn),
+                                               Channel::Endpoint::kListen);
 
         // Initialize with sequential values.
         std::vector<uint8_t> data(dataSize);
@@ -53,8 +53,8 @@ TEST_P(ChannelTest, ClientToServer) {
         ASSERT_FALSE(future.get());
       },
       [&](std::shared_ptr<transport::Connection> conn) {
-        auto channel = factory2->createChannel(
-            std::move(conn), Channel::Endpoint::kConnect);
+        auto channel = factory2->createChannel(std::move(conn),
+                                               Channel::Endpoint::kConnect);
 
         // Initialize with zeroes.
         std::vector<uint8_t> data(dataSize);
@@ -83,8 +83,8 @@ TEST_P(ChannelTest, ServerToClient) {
 
   testConnectionPair(
       [&](std::shared_ptr<transport::Connection> conn) {
-        auto channel = factory1->createChannel(
-            std::move(conn), Channel::Endpoint::kListen);
+        auto channel = factory1->createChannel(std::move(conn),
+                                               Channel::Endpoint::kListen);
 
         // Initialize with zeroes.
         std::vector<uint8_t> data(dataSize);
@@ -101,8 +101,8 @@ TEST_P(ChannelTest, ServerToClient) {
         }
       },
       [&](std::shared_ptr<transport::Connection> conn) {
-        auto channel = factory2->createChannel(
-            std::move(conn), Channel::Endpoint::kConnect);
+        auto channel = factory2->createChannel(std::move(conn),
+                                               Channel::Endpoint::kConnect);
 
         // Initialize with sequential values.
         std::vector<uint8_t> data(dataSize);
@@ -147,8 +147,8 @@ TEST_P(ChannelTest, CallbacksAreDeferred) {
 
   testConnectionPair(
       [&](std::shared_ptr<transport::Connection> conn) {
-        auto channel = factory1->createChannel(
-            std::move(conn), Channel::Endpoint::kListen);
+        auto channel = factory1->createChannel(std::move(conn),
+                                               Channel::Endpoint::kListen);
 
         // Initialize with sequential values.
         std::vector<uint8_t> data(dataSize);
@@ -168,8 +168,8 @@ TEST_P(ChannelTest, CallbacksAreDeferred) {
         ASSERT_FALSE(promise.get_future().get());
       },
       [&](std::shared_ptr<transport::Connection> conn) {
-        auto channel = factory2->createChannel(
-            std::move(conn), Channel::Endpoint::kConnect);
+        auto channel = factory2->createChannel(std::move(conn),
+                                               Channel::Endpoint::kConnect);
 
         // Initialize with zeroes.
         std::vector<uint8_t> data(dataSize);
@@ -179,14 +179,11 @@ TEST_P(ChannelTest, CallbacksAreDeferred) {
         std::promise<Error> promise;
         std::mutex mutex;
         std::unique_lock<std::mutex> callerLock(mutex);
-        channel->recv(
-            descriptorQueue.pop(),
-            data.data(),
-            data.size(),
-            [&promise, &mutex](const Error& error) {
-              std::unique_lock<std::mutex> calleeLock(mutex);
-              promise.set_value(error);
-            });
+        channel->recv(descriptorQueue.pop(), data.data(), data.size(),
+                      [&promise, &mutex](const Error& error) {
+                        std::unique_lock<std::mutex> calleeLock(mutex);
+                        promise.set_value(error);
+                      });
         callerLock.unlock();
         ASSERT_FALSE(promise.get_future().get());
 

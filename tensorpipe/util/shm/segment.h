@@ -75,12 +75,9 @@ class Segment {
   /// Caller can use the shared_ptr to the underlying Segment.
   template <class T, class... Args>
   static std::pair<std::shared_ptr<T>, std::shared_ptr<Segment>> create(
-      bool perm_write,
-      optional<PageType> page_type,
-      Args&&... args) {
-    static_assert(
-        !std::is_array<T>::value,
-        "Did you mean to use the array version of Segment::create");
+      bool perm_write, optional<PageType> page_type, Args&&... args) {
+    static_assert(!std::is_array<T>::value,
+                  "Did you mean to use the array version of Segment::create");
     static_assert(std::is_trivially_copyable<T>::value, "!");
 
     const auto byte_size = sizeof(T);
@@ -103,9 +100,7 @@ class Segment {
   // XXX: Fuse all versions of create.
   template <class T, typename TScalar = typename std::remove_extent<T>::type>
   static std::pair<std::shared_ptr<TScalar>, std::shared_ptr<Segment>> create(
-      size_t num_elements,
-      bool perm_write,
-      optional<PageType> page_type) {
+      size_t num_elements, bool perm_write, optional<PageType> page_type) {
     static_assert(
         std::is_trivially_copyable<T>::value,
         "Shared memory segments are restricted to only store objects that "
@@ -115,10 +110,9 @@ class Segment {
         std::is_array<T>::value,
         "Did you mean to use the non-array version, Segment::create<T, ...>");
 
-    static_assert(
-        std::rank<T>::value == 1,
-        "Currently, only one-dimensional arrays are supported. "
-        "You can use the non-template version of Segment::create");
+    static_assert(std::rank<T>::value == 1,
+                  "Currently, only one-dimensional arrays are supported. "
+                  "You can use the non-template version of Segment::create");
 
     static_assert(std::is_trivially_copyable<TScalar>::value, "!");
     static_assert(!std::is_array<TScalar>::value, "!");
@@ -144,19 +138,14 @@ class Segment {
   ///
   /// Lifecycle of shared_ptr and Segment's reference_wrapper is
   /// identical to create<>().
-  template <
-      class T,
-      typename TScalar = typename std::remove_extent<T>::type,
-      std::enable_if_t<std::is_array<T>::value, int> = 0>
+  template <class T, typename TScalar = typename std::remove_extent<T>::type,
+            std::enable_if_t<std::is_array<T>::value, int> = 0>
   static std::pair<std::shared_ptr<TScalar>, std::shared_ptr<Segment>> load(
-      int fd,
-      bool perm_write,
-      optional<PageType> page_type) {
+      int fd, bool perm_write, optional<PageType> page_type) {
     auto segment = std::make_shared<Segment>(fd, perm_write, page_type);
     const size_t size = segment->getSize();
-    static_assert(
-        std::rank<T>::value == 1,
-        "Currently only rank one arrays are supported");
+    static_assert(std::rank<T>::value == 1,
+                  "Currently only rank one arrays are supported");
     static_assert(std::is_trivially_copyable<TScalar>::value, "!");
     auto ptr = static_cast<TScalar*>(segment->getPtr());
     return {std::shared_ptr<TScalar>(segment, ptr), segment};
@@ -169,9 +158,7 @@ class Segment {
   /// identical to create<>().
   template <class T, std::enable_if_t<!std::is_array<T>::value, int> = 0>
   static std::pair<std::shared_ptr<T>, std::shared_ptr<Segment>> load(
-      int fd,
-      bool perm_write,
-      optional<PageType> page_type) {
+      int fd, bool perm_write, optional<PageType> page_type) {
     auto segment = std::make_shared<Segment>(fd, perm_write, page_type);
     const size_t size = segment->getSize();
     // XXX: Do some checking other than the size that we are loading
@@ -188,25 +175,15 @@ class Segment {
     return {std::shared_ptr<T>(segment, ptr), segment};
   }
 
-  const int getFd() const {
-    return fd_;
-  }
+  const int getFd() const { return fd_; }
 
-  void* getPtr() {
-    return base_ptr_;
-  }
+  void* getPtr() { return base_ptr_; }
 
-  const void* getPtr() const {
-    return base_ptr_;
-  }
+  const void* getPtr() const { return base_ptr_; }
 
-  size_t getSize() const {
-    return byte_size_;
-  }
+  size_t getSize() const { return byte_size_; }
 
-  PageType getPageType() const {
-    return page_type_;
-  }
+  PageType getPageType() const { return page_type_; }
 
   ~Segment();
 
@@ -226,6 +203,6 @@ class Segment {
   void mmap(bool perm_write, optional<PageType> page_type);
 };
 
-} // namespace shm
-} // namespace util
-} // namespace tensorpipe
+}  // namespace shm
+}  // namespace util
+}  // namespace tensorpipe

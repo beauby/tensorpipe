@@ -57,17 +57,12 @@ class Channel {
   virtual ~Channel();
 
   // Send memory region to peer.
-  virtual TDescriptor send(
-      const void* ptr,
-      size_t length,
-      TSendCallback callback) = 0;
+  virtual TDescriptor send(const void* ptr, size_t length,
+                           TSendCallback callback) = 0;
 
   // Receive memory region from peer.
-  virtual void recv(
-      TDescriptor descriptor,
-      void* ptr,
-      size_t length,
-      TRecvCallback callback) = 0;
+  virtual void recv(TDescriptor descriptor, void* ptr, size_t length,
+                    TRecvCallback callback) = 0;
 };
 
 // Abstract base class for channel factory classes.
@@ -101,8 +96,7 @@ class ChannelFactory {
   // as soon as initialization has completed.
   //
   virtual std::shared_ptr<Channel> createChannel(
-      std::shared_ptr<transport::Connection>,
-      Channel::Endpoint) = 0;
+      std::shared_ptr<transport::Connection>, Channel::Endpoint) = 0;
 
   virtual void join();
 
@@ -110,5 +104,5 @@ class ChannelFactory {
   std::string name_;
 };
 
-} // namespace channel
-} // namespace tensorpipe
+}  // namespace channel
+}  // namespace tensorpipe

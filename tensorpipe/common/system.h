@@ -47,9 +47,7 @@ TimeStamp DurationToTimeStamp(TDuration d) {
 //
 
 /// Is it a Power of 2?
-constexpr bool isPow2(uint64_t n) noexcept {
-  return n > 0 && !((n - 1) & n);
-}
+constexpr bool isPow2(uint64_t n) noexcept { return n > 0 && !((n - 1) & n); }
 
 /// Smallest power of 2 larger or equal to <n>.
 constexpr uint32_t nextPow2(uint32_t n) noexcept {
@@ -89,4 +87,4 @@ constexpr uint64_t maxPow2LessEqualThan(uint64_t n) noexcept {
 // Return contents of /proc/sys/kernel/random/boot_id.
 optional<std::string> getBootID();
 
-} // namespace tensorpipe
+}  // namespace tensorpipe

@@ -17,8 +17,8 @@ std::tuple<std::string, std::string> splitSchemeOfURL(const std::string& url) {
   if (endOfScheme == std::string::npos) {
     TP_THROW_EINVAL() << "url has no scheme: " << url;
   }
-  return std::make_tuple(
-      url.substr(0, endOfScheme), url.substr(endOfScheme + 3));
+  return std::make_tuple(url.substr(0, endOfScheme),
+                         url.substr(endOfScheme + 3));
 }
 
-} // namespace tensorpipe
+}  // namespace tensorpipe

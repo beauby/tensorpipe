@@ -34,6 +34,6 @@ class Context final : public transport::Context {
   std::string domainDescriptor_;
 };
 
-} // namespace uv
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace uv
+}  // namespace transport
+}  // namespace tensorpipe

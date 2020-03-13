@@ -35,5 +35,5 @@ class Listener {
   virtual address_t addr() const = 0;
 };
 
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace transport
+}  // namespace tensorpipe

@@ -54,10 +54,8 @@ class Listener::Impl : public std::enable_shared_from_this<Listener::Impl> {
   // So we'll keep getting notified of new connections even if we don't know
   // what to do with them and don't want them. Thus we must store them
   // somewhere. This is what RearmableCallback is for.
-  RearmableCallbackWithOwnLock<
-      accept_callback_fn,
-      const Error&,
-      std::shared_ptr<Connection>>
+  RearmableCallbackWithOwnLock<accept_callback_fn, const Error&,
+                               std::shared_ptr<Connection>>
       callback_;
 
   // By having the instance store a shared_ptr to itself we create a reference
@@ -66,9 +64,8 @@ class Listener::Impl : public std::enable_shared_from_this<Listener::Impl> {
   std::shared_ptr<Impl> leak_;
 };
 
-Listener::Impl::Impl(
-    std::shared_ptr<Loop> loop,
-    std::shared_ptr<TCPHandle> handle)
+Listener::Impl::Impl(std::shared_ptr<Loop> loop,
+                     std::shared_ptr<TCPHandle> handle)
     : loop_(std::move(loop)), handle_(std::move(handle)) {}
 
 void Listener::Impl::initFromLoop() {
@@ -87,32 +84,27 @@ std::string Listener::Impl::addrFromLoop() const {
   return handle_->sockNameFromLoop().str();
 }
 
-void Listener::Impl::closeFromLoop() {
-  handle_->closeFromLoop();
-}
+void Listener::Impl::closeFromLoop() { handle_->closeFromLoop(); }
 
 void Listener::Impl::connectionCallbackFromLoop_(int status) {
   TP_DCHECK(loop_->inLoopThread());
   if (status != 0) {
-    callback_.trigger(
-        TP_CREATE_ERROR(UVError, status), std::shared_ptr<Connection>());
+    callback_.trigger(TP_CREATE_ERROR(UVError, status),
+                      std::shared_ptr<Connection>());
     return;
   }
 
   auto connection = TCPHandle::create(loop_);
   connection->initFromLoop();
   handle_->acceptFromLoop(connection);
-  callback_.trigger(
-      Error::kSuccess, Connection::create_(loop_, std::move(connection)));
+  callback_.trigger(Error::kSuccess,
+                    Connection::create_(loop_, std::move(connection)));
 }
 
-void Listener::Impl::closeCallbackFromLoop_() {
-  leak_.reset();
-}
+void Listener::Impl::closeCallbackFromLoop_() { leak_.reset(); }
 
-std::shared_ptr<Listener> Listener::create_(
-    std::shared_ptr<Loop> loop,
-    const Sockaddr& addr) {
+std::shared_ptr<Listener> Listener::create_(std::shared_ptr<Loop> loop,
+                                            const Sockaddr& addr) {
   auto handle = TCPHandle::create(loop);
   loop->deferToLoop([handle, addr]() {
     handle->initFromLoop();
@@ -124,10 +116,8 @@ std::shared_ptr<Listener> Listener::create_(
   return listener;
 }
 
-Listener::Listener(
-    ConstructorToken /* unused */,
-    std::shared_ptr<Loop> loop,
-    std::shared_ptr<TCPHandle> handle)
+Listener::Listener(ConstructorToken /* unused */, std::shared_ptr<Loop> loop,
+                   std::shared_ptr<TCPHandle> handle)
     : loop_(std::move(loop)),
       impl_(std::make_shared<Impl>(loop_, std::move(handle))) {}
 
@@ -151,6 +141,6 @@ Listener::~Listener() {
   loop_->deferToLoop([impl{impl_}]() { impl->closeFromLoop(); });
 }
 
-} // namespace uv
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace uv
+}  // namespace transport
+}  // namespace tensorpipe

@@ -25,18 +25,13 @@ bool is_uninitialized(const std::weak_ptr<T>& weak) {
   return !weak.owner_before(empty) && !empty.owner_before(weak);
 }
 
-} // namespace
+}  // namespace
 
-FunctionEventHandler::FunctionEventHandler(
-    Loop* loop,
-    int fd,
-    int event,
-    TFunction fn)
+FunctionEventHandler::FunctionEventHandler(Loop* loop, int fd, int event,
+                                           TFunction fn)
     : loop_(loop), fd_(fd), event_(event), fn_(std::move(fn)) {}
 
-FunctionEventHandler::~FunctionEventHandler() {
-  cancel();
-}
+FunctionEventHandler::~FunctionEventHandler() { cancel(); }
 
 void FunctionEventHandler::start() {
   loop_->registerDescriptor(fd_, event_, shared_from_this());
@@ -100,14 +95,10 @@ void Loop::deferToReactor(TDeferredFunction fn) {
   reactor_->trigger(deferredFunctionReactorToken_);
 }
 
-const std::shared_ptr<Reactor>& Loop::reactor() {
-  return reactor_;
-}
+const std::shared_ptr<Reactor>& Loop::reactor() { return reactor_; }
 
-void Loop::registerDescriptor(
-    int fd,
-    int events,
-    std::shared_ptr<EventHandler> h) {
+void Loop::registerDescriptor(int fd, int events,
+                              std::shared_ptr<EventHandler> h) {
   struct epoll_event ev;
   ev.events = events;
   ev.data.fd = fd;
@@ -244,6 +235,6 @@ void Loop::handleDeferredFunctionFromReactor() {
   fn();
 }
 
-} // namespace shm
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace shm
+}  // namespace transport
+}  // namespace tensorpipe

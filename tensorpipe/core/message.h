@@ -52,4 +52,4 @@ class Message final {
   std::vector<Tensor> tensors;
 };
 
-} // namespace tensorpipe
+}  // namespace tensorpipe

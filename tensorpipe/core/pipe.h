@@ -48,22 +48,14 @@ class Pipe final : public std::enable_shared_from_this<Pipe> {
   // Initialization
   //
 
-  static std::shared_ptr<Pipe> create(
-      std::shared_ptr<Context>,
-      const std::string&);
+  static std::shared_ptr<Pipe> create(std::shared_ptr<Context>,
+                                      const std::string&);
 
-  Pipe(
-      ConstructorToken,
-      std::shared_ptr<Context>,
-      std::string,
-      std::shared_ptr<transport::Connection>);
+  Pipe(ConstructorToken, std::shared_ptr<Context>, std::string,
+       std::shared_ptr<transport::Connection>);
 
-  Pipe(
-      ConstructorToken,
-      std::shared_ptr<Context>,
-      std::shared_ptr<Listener>,
-      std::string,
-      std::shared_ptr<transport::Connection>);
+  Pipe(ConstructorToken, std::shared_ptr<Context>, std::shared_ptr<Listener>,
+       std::string, std::shared_ptr<transport::Connection>);
 
   ~Pipe();
 
@@ -199,24 +191,12 @@ class Pipe final : public std::enable_shared_from_this<Pipe> {
   // Helpers to schedule our callbacks into user code
   //
 
-  void triggerReadDescriptorCallback_(
-      int64_t,
-      read_descriptor_callback_fn&&,
-      const Error&,
-      Message,
-      TLock);
-  void triggerReadCallback_(
-      int64_t,
-      read_callback_fn&&,
-      const Error&,
-      Message,
-      TLock);
-  void triggerWriteCallback_(
-      int64_t,
-      write_callback_fn&&,
-      const Error&,
-      Message,
-      TLock);
+  void triggerReadDescriptorCallback_(int64_t, read_descriptor_callback_fn&&,
+                                      const Error&, Message, TLock);
+  void triggerReadCallback_(int64_t, read_callback_fn&&, const Error&, Message,
+                            TLock);
+  void triggerWriteCallback_(int64_t, write_callback_fn&&, const Error&,
+                             Message, TLock);
 
   //
   // Error handling
@@ -233,14 +213,9 @@ class Pipe final : public std::enable_shared_from_this<Pipe> {
   void onReadWhileServerWaitingForBrochure_(const proto::Packet&, TLock);
   void onReadWhileClientWaitingForBrochureAnswer_(const proto::Packet&, TLock);
   void onAcceptWhileServerWaitingForConnection_(
-      std::string,
-      std::shared_ptr<transport::Connection>,
-      TLock);
+      std::string, std::shared_ptr<transport::Connection>, TLock);
   void onAcceptWhileServerWaitingForChannel_(
-      std::string,
-      std::string,
-      std::shared_ptr<transport::Connection>,
-      TLock);
+      std::string, std::string, std::shared_ptr<transport::Connection>, TLock);
   void onReadOfMessageDescriptor_(const proto::Packet&, TLock);
   void onReadOfMessageData_(int64_t, TLock);
   void onRecvOfTensorData_(int64_t, TLock);
@@ -256,4 +231,4 @@ class Pipe final : public std::enable_shared_from_this<Pipe> {
   friend class CallbackWrapper;
 };
 
-} // namespace tensorpipe
+}  // namespace tensorpipe

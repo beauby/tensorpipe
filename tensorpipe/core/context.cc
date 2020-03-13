@@ -19,34 +19,30 @@ std::shared_ptr<Context> Context::create() {
 
 Context::Context(ConstructorToken /* unused */) {}
 
-void Context::registerTransport(
-    int64_t priority,
-    std::string transport,
-    std::shared_ptr<transport::Context> context) {
+void Context::registerTransport(int64_t priority, std::string transport,
+                                std::shared_ptr<transport::Context> context) {
   TP_THROW_ASSERT_IF(transport.empty());
   TP_THROW_ASSERT_IF(contexts_.find(transport) != contexts_.end())
       << "transport " << transport << " already registered";
-  TP_THROW_ASSERT_IF(
-      contextsByPriority_.find(priority) != contextsByPriority_.end())
+  TP_THROW_ASSERT_IF(contextsByPriority_.find(priority) !=
+                     contextsByPriority_.end())
       << "transport with priority " << priority << " already registered";
   contexts_.emplace(transport, context);
   contextsByPriority_.emplace(priority, std::make_tuple(transport, context));
 }
 
 void Context::registerChannelFactory(
-    int64_t priority,
-    std::string name,
+    int64_t priority, std::string name,
     std::shared_ptr<channel::ChannelFactory> channelFactory) {
   TP_THROW_ASSERT_IF(name.empty());
   TP_THROW_ASSERT_IF(channelFactories_.find(name) != channelFactories_.end())
       << "channel factory " << name << " already registered";
-  TP_THROW_ASSERT_IF(
-      channelFactoriesByPriority_.find(priority) !=
-      channelFactoriesByPriority_.end())
+  TP_THROW_ASSERT_IF(channelFactoriesByPriority_.find(priority) !=
+                     channelFactoriesByPriority_.end())
       << "channel factory with priority " << priority << " already registered";
   channelFactories_.emplace(name, channelFactory);
-  channelFactoriesByPriority_.emplace(
-      priority, std::make_tuple(name, channelFactory));
+  channelFactoriesByPriority_.emplace(priority,
+                                      std::make_tuple(name, channelFactory));
 }
 
 std::shared_ptr<transport::Context> Context::getContextForTransport_(
@@ -87,4 +83,4 @@ Context::~Context() {
   TP_DCHECK(done_);
 }
 
-} // namespace tensorpipe
+}  // namespace tensorpipe

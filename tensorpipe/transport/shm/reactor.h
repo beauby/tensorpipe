@@ -96,6 +96,6 @@ class Reactor final : public std::enable_shared_from_this<Reactor> {
   };
 };
 
-} // namespace shm
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace shm
+}  // namespace transport
+}  // namespace tensorpipe

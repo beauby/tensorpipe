@@ -24,6 +24,6 @@ class UVError final : public BaseError {
   int error_;
 };
 
-} // namespace uv
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace uv
+}  // namespace transport
+}  // namespace tensorpipe

@@ -73,6 +73,6 @@ Error Fd::writeFull(const void* buf, size_t count) {
   return Error::kSuccess;
 }
 
-} // namespace shm
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace shm
+}  // namespace transport
+}  // namespace tensorpipe

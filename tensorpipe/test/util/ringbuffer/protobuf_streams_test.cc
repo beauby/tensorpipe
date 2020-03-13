@@ -25,8 +25,8 @@ namespace {
 std::shared_ptr<RingBuffer> makeRingBuffer(size_t size) {
   auto header = std::make_shared<RingBufferHeader>(size);
   // In C++20 use std::make_shared<uint8_t[]>(size)
-  auto data = std::shared_ptr<uint8_t>(
-      new uint8_t[header->kDataPoolByteSize], std::default_delete<uint8_t[]>());
+  auto data = std::shared_ptr<uint8_t>(new uint8_t[header->kDataPoolByteSize],
+                                       std::default_delete<uint8_t[]>());
   return std::make_shared<RingBuffer>(std::move(header), std::move(data));
 }
 
@@ -52,9 +52,8 @@ proto::Brochure getMessage() {
   return message;
 }
 
-void test_serialize_parse(
-    std::shared_ptr<RingBuffer> rb,
-    const proto::Brochure message) {
+void test_serialize_parse(std::shared_ptr<RingBuffer> rb,
+                          const proto::Brochure message) {
   uint32_t len = message.ByteSize();
   EXPECT_LE(len, rb->getHeader().kDataPoolByteSize)
       << "Message larger than ring buffer.";
@@ -93,7 +92,7 @@ void test_serialize_parse(
       message, parsed_message));
 }
 
-} // namespace
+}  // namespace
 
 TEST(RingBuffer, NonWrappingZeroCopyStream) {
   constexpr size_t kBufferSize = 2 * 1024 * 1024;

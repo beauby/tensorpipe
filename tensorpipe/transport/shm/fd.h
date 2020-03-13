@@ -33,9 +33,7 @@ class Fd {
   Fd& operator=(const Fd&) = delete;
 
   // Custom move constructor.
-  Fd(Fd&& other) {
-    std::swap(fd_, other.fd_);
-  }
+  Fd(Fd&& other) { std::swap(fd_, other.fd_); }
 
   // Custom move assignment.
   Fd& operator=(Fd&& other) {
@@ -44,9 +42,7 @@ class Fd {
   }
 
   // Return underlying file descriptor.
-  inline int fd() const {
-    return fd_;
-  }
+  inline int fd() const { return fd_; }
 
   // Release underlying file descriptor.
   int release() {
@@ -107,6 +103,6 @@ class Fd {
   int fd_{-1};
 };
 
-} // namespace shm
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace shm
+}  // namespace transport
+}  // namespace tensorpipe

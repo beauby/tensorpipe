@@ -28,7 +28,7 @@ void writeToken(util::ringbuffer::Producer& producer, Reactor::TToken token) {
   }
 }
 
-} // namespace
+}  // namespace
 
 Reactor::Reactor() {
   int headerFd;
@@ -115,13 +115,10 @@ Reactor::Trigger::Trigger(Fd&& headerFd, Fd&& dataFd)
     : producer_(util::ringbuffer::shm::load(
           // The header and data segment objects take over ownership
           // of file descriptors. Release them to avoid double close.
-          headerFd.release(),
-          dataFd.release())) {}
+          headerFd.release(), dataFd.release())) {}
 
-void Reactor::Trigger::run(TToken token) {
-  writeToken(producer_, token);
-}
+void Reactor::Trigger::run(TToken token) { writeToken(producer_, token); }
 
-} // namespace shm
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace shm
+}  // namespace transport
+}  // namespace tensorpipe

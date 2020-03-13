@@ -19,11 +19,10 @@ namespace tensorpipe {
 namespace channel {
 namespace {
 
-template <
-    typename T,
-    typename std::enable_if<
-        std::is_base_of<google::protobuf::MessageLite, T>::value,
-        bool>::type = false>
+template <typename T,
+          typename std::enable_if<
+              std::is_base_of<google::protobuf::MessageLite, T>::value,
+              bool>::type = false>
 Channel::TDescriptor saveDescriptor(const T& pb) {
   Channel::TDescriptor out;
   const auto len = pb.ByteSize();
@@ -33,11 +32,10 @@ Channel::TDescriptor saveDescriptor(const T& pb) {
   return out;
 }
 
-template <
-    typename T,
-    typename std::enable_if<
-        std::is_base_of<google::protobuf::MessageLite, T>::value,
-        bool>::type = false>
+template <typename T,
+          typename std::enable_if<
+              std::is_base_of<google::protobuf::MessageLite, T>::value,
+              bool>::type = false>
 T loadDescriptor(const Channel::TDescriptor& in) {
   T pb;
   const auto success = pb.ParseFromArray(in.data(), in.size());
@@ -45,6 +43,6 @@ T loadDescriptor(const Channel::TDescriptor& in) {
   return pb;
 }
 
-} // namespace
-} // namespace channel
-} // namespace tensorpipe
+}  // namespace
+}  // namespace channel
+}  // namespace tensorpipe

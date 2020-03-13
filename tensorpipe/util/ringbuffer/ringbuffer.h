@@ -80,32 +80,18 @@ class RingBufferHeader {
 
   // Get size that is only guaranteed to be correct when producers and consumers
   // are synchronized.
-  size_t usedSizeWeak() const {
-    return atomicHead_ - atomicTail_;
-  }
+  size_t usedSizeWeak() const { return atomicHead_ - atomicTail_; }
 
-  size_t freeSizeWeak() const {
-    return kDataPoolByteSize - usedSizeWeak();
-  }
+  size_t freeSizeWeak() const { return kDataPoolByteSize - usedSizeWeak(); }
 
-  uint64_t readHead() const {
-    return atomicHead_;
-  }
+  uint64_t readHead() const { return atomicHead_; }
 
-  uint64_t readTail() const {
-    return atomicTail_;
-  }
+  uint64_t readTail() const { return atomicTail_; }
 
-  void incHead(uint64_t inc) {
-    atomicHead_ += inc;
-  }
-  void incTail(uint64_t inc) {
-    atomicTail_ += inc;
-  }
+  void incHead(uint64_t inc) { atomicHead_ += inc; }
+  void incTail(uint64_t inc) { atomicTail_ += inc; }
 
-  void drop() {
-    atomicTail_.store(atomicHead_.load());
-  }
+  void drop() { atomicTail_.store(atomicHead_.load()); }
 
   // acquired by producers.
   std::atomic_flag in_write_tx;
@@ -136,29 +122,20 @@ class RingBuffer final {
   RingBuffer(const RingBuffer&) = delete;
   RingBuffer(RingBuffer&&) = delete;
 
-  RingBuffer(
-      std::shared_ptr<RingBufferHeader> header,
-      std::shared_ptr<uint8_t> data)
+  RingBuffer(std::shared_ptr<RingBufferHeader> header,
+             std::shared_ptr<uint8_t> data)
       : header_{std::move(header)}, data_{std::move(data)} {
     TP_THROW_IF_NULLPTR(header_) << "Header cannot be nullptr";
     TP_THROW_IF_NULLPTR(data_) << "Data cannot be nullptr";
   }
 
-  const RingBufferHeader& getHeader() const {
-    return *header_;
-  }
+  const RingBufferHeader& getHeader() const { return *header_; }
 
-  RingBufferHeader& getHeader() {
-    return *header_;
-  }
+  RingBufferHeader& getHeader() { return *header_; }
 
-  const uint8_t* getData() const {
-    return data_.get();
-  }
+  const uint8_t* getData() const { return data_.get(); }
 
-  uint8_t* getData() {
-    return data_.get();
-  }
+  uint8_t* getData() { return data_.get(); }
 
  protected:
   std::shared_ptr<RingBufferHeader> header_;
@@ -181,17 +158,11 @@ class RingBufferWrapper {
     TP_THROW_IF_NULLPTR(data_);
   }
 
-  auto& getHeader() {
-    return header_;
-  }
+  auto& getHeader() { return header_; }
 
-  const auto& getHeader() const {
-    return header_;
-  }
+  const auto& getHeader() const { return header_; }
 
-  auto getRingBuffer() {
-    return rb_;
-  }
+  auto getRingBuffer() { return rb_; }
 
  protected:
   std::shared_ptr<RingBuffer> rb_;
@@ -200,6 +171,6 @@ class RingBufferWrapper {
   unsigned tx_size_ = 0;
 };
 
-} // namespace ringbuffer
-} // namespace util
-} // namespace tensorpipe
+}  // namespace ringbuffer
+}  // namespace util
+}  // namespace tensorpipe

@@ -43,7 +43,7 @@ class Handler : public EventHandler {
   std::deque<int> events_;
 };
 
-} // namespace
+}  // namespace
 
 TEST(Loop, Create) {
   auto loop = Loop::create();

@@ -20,7 +20,8 @@
 
 class ChannelTestHelper {
  public:
-  virtual std::shared_ptr<tensorpipe::channel::ChannelFactory> makeFactory() = 0;
+  virtual std::shared_ptr<tensorpipe::channel::ChannelFactory>
+  makeFactory() = 0;
   virtual std::string getName() = 0;
   virtual ~ChannelTestHelper() = default;
 };
@@ -61,35 +62,28 @@ class ChannelTest : public ::testing::TestWithParam<ChannelTestHelper*> {
     context->join();
   }
 
-  [[nodiscard]] std::pair<
-      tensorpipe::channel::Channel::TDescriptor,
-      std::future<tensorpipe::Error>>
-  sendWithFuture(
-      std::shared_ptr<tensorpipe::channel::Channel> channel,
-      const void* ptr,
-      size_t length) {
+  [[nodiscard]] std::pair<tensorpipe::channel::Channel::TDescriptor,
+                          std::future<tensorpipe::Error>>
+  sendWithFuture(std::shared_ptr<tensorpipe::channel::Channel> channel,
+                 const void* ptr, size_t length) {
     auto promise = std::make_shared<std::promise<tensorpipe::Error>>();
     auto future = promise->get_future();
     auto descriptor = channel->send(
-        ptr,
-        length,
+        ptr, length,
         [promise{std::move(promise)}](const tensorpipe::Error& error) {
           promise->set_value(error);
         });
     return {std::move(descriptor), std::move(future)};
   }
 
-  [[nodiscard]] std::future<tensorpipe::Error> recvWithFuture(
-      std::shared_ptr<tensorpipe::channel::Channel> channel,
-      tensorpipe::channel::Channel::TDescriptor descriptor,
-      void* ptr,
-      size_t length) {
+      [[nodiscard]] std::future<tensorpipe::Error> recvWithFuture(
+          std::shared_ptr<tensorpipe::channel::Channel> channel,
+          tensorpipe::channel::Channel::TDescriptor descriptor, void* ptr,
+          size_t length) {
     auto promise = std::make_shared<std::promise<tensorpipe::Error>>();
     auto future = promise->get_future();
     channel->recv(
-        std::move(descriptor),
-        ptr,
-        length,
+        std::move(descriptor), ptr, length,
         [promise{std::move(promise)}](const tensorpipe::Error& error) {
           promise->set_value(error);
         });

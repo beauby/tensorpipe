@@ -41,5 +41,5 @@ class Context {
   virtual const std::string& domainDescriptor() const = 0;
 };
 
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace transport
+}  // namespace tensorpipe

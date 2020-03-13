@@ -31,9 +31,8 @@ Sockaddr Sockaddr::createAbstractUnixAddr(const std::string& name) {
   // Note: instead of using sizeof(sun) we compute the addrlen from
   // the string length of the abstract socket name. If we use
   // sizeof(sun), lsof shows all the trailing NUL characters.
-  return Sockaddr(
-      reinterpret_cast<struct sockaddr*>(&sun),
-      sizeof(sun.sun_family) + offset + len + 1);
+  return Sockaddr(reinterpret_cast<struct sockaddr*>(&sun),
+                  sizeof(sun.sun_family) + offset + len + 1);
 };
 
 Sockaddr::Sockaddr(struct sockaddr* addr, socklen_t addrlen) {
@@ -132,6 +131,6 @@ void Socket::connect(const Sockaddr& addr) {
   }
 }
 
-} // namespace shm
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace shm
+}  // namespace transport
+}  // namespace tensorpipe

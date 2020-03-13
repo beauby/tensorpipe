@@ -27,30 +27,20 @@ namespace shm {
 
 namespace {
 
-void saveOneFdToArray(int& dst, const int& src) {
-  dst = src;
-}
+void saveOneFdToArray(int& dst, const int& src) { dst = src; }
 
-void saveOneFdToArray(int& dst, const Fd& src) {
-  dst = src.fd();
-}
+void saveOneFdToArray(int& dst, const Fd& src) { dst = src.fd(); }
 
 template <size_t... Idxs, typename... Fds>
-void saveFdsToArray(
-    int* array,
-    std::index_sequence<Idxs...>,
-    const Fds&... fds) {
+void saveFdsToArray(int* array, std::index_sequence<Idxs...>,
+                    const Fds&... fds) {
   // This is a trick to do pack expansion of the function call.
   auto dummy = {(saveOneFdToArray(array[Idxs], fds), 0)...};
 }
 
-void loadOneFdFromArray(int& src, int& dst) {
-  dst = src;
-}
+void loadOneFdFromArray(int& src, int& dst) { dst = src; }
 
-void loadOneFdFromArray(int& src, Fd& dst) {
-  dst = Fd(src);
-}
+void loadOneFdFromArray(int& src, Fd& dst) { dst = Fd(src); }
 
 template <size_t... Idxs, typename... Fds>
 void loadFdsFromArray(int* array, std::index_sequence<Idxs...>, Fds&... fds) {
@@ -58,7 +48,7 @@ void loadFdsFromArray(int* array, std::index_sequence<Idxs...>, Fds&... fds) {
   auto dummy = {(loadOneFdFromArray(array[Idxs], fds), 0)...};
 }
 
-} // namespace
+}  // namespace
 
 template <typename T, typename... Fds>
 Error sendToSocket(int socketFd, const T& t1, const T& t2, const Fds&... fds) {
@@ -183,9 +173,7 @@ class Sockaddr final {
     return reinterpret_cast<const struct sockaddr*>(&addr_);
   }
 
-  inline socklen_t addrlen() const {
-    return addrlen_;
-  }
+  inline socklen_t addrlen() const { return addrlen_; }
 
   std::string str() const;
 
@@ -236,21 +224,17 @@ class Socket final : public Fd, public std::enable_shared_from_this<Socket> {
   }
 
   // Send object and file descriptor.
-  template <
-      typename T,
-      typename... Fds,
-      typename std::enable_if<std::is_trivially_copyable<T>::value, bool>::
-          type = false>
+  template <typename T, typename... Fds,
+            typename std::enable_if<std::is_trivially_copyable<T>::value,
+                                    bool>::type = false>
   Error sendPayloadAndFds(const T& t1, const T& t2, const Fds&... fds) {
     return sendToSocket(fd_, t1, t2, fds...);
   }
 
   // Receive object and file descriptor.
-  template <
-      typename T,
-      typename... Fds,
-      typename std::enable_if<std::is_trivially_copyable<T>::value, bool>::
-          type = false>
+  template <typename T, typename... Fds,
+            typename std::enable_if<std::is_trivially_copyable<T>::value,
+                                    bool>::type = false>
   Error recvPayloadAndFds(T& t1, T& t2, Fds&... fds) {
     return recvFromSocket(fd_, t1, t2, fds...);
   }
@@ -260,6 +244,6 @@ class Socket final : public Fd, public std::enable_shared_from_this<Socket> {
   void configureTimeout(int opt, std::chrono::milliseconds timeout);
 };
 
-} // namespace shm
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace shm
+}  // namespace transport
+}  // namespace tensorpipe

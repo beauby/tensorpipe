@@ -29,9 +29,7 @@ TEST_P(TransportTest, Chunking) {
   this->testConnection(
       [&](std::shared_ptr<Connection> conn) {
         this->doRead(
-            conn,
-            dstBuf.get(),
-            kMsgSize,
+            conn, dstBuf.get(), kMsgSize,
             [&, conn](const Error& error, const void* ptr, size_t len) {
               ASSERT_FALSE(error) << error.what();
               ASSERT_EQ(len, kMsgSize);
@@ -45,14 +43,11 @@ TEST_P(TransportTest, Chunking) {
         readCompletedFuture.wait();
       },
       [&](std::shared_ptr<Connection> conn) {
-        this->doWrite(
-            conn,
-            srcBuf.c_str(),
-            srcBuf.length(),
-            [&, conn](const Error& error) {
-              ASSERT_FALSE(error) << error.what();
-              writeCompletedProm.set_value();
-            });
+        this->doWrite(conn, srcBuf.c_str(), srcBuf.length(),
+                      [&, conn](const Error& error) {
+                        ASSERT_FALSE(error) << error.what();
+                        writeCompletedProm.set_value();
+                      });
         writeCompletedFuture.wait();
         readCompletedFuture.wait();
       });
@@ -82,11 +77,11 @@ TEST_P(TransportTest, ChunkingImplicitRead) {
         readCompletedFuture.wait();
       },
       [&](std::shared_ptr<Connection> conn) {
-        this->doWrite(
-            conn, msg.c_str(), msg.length(), [&, conn](const Error& error) {
-              ASSERT_FALSE(error) << error.what();
-              writeCompletedProm.set_value();
-            });
+        this->doWrite(conn, msg.c_str(), msg.length(),
+                      [&, conn](const Error& error) {
+                        ASSERT_FALSE(error) << error.what();
+                        writeCompletedProm.set_value();
+                      });
         writeCompletedFuture.wait();
         readCompletedFuture.wait();
       });
@@ -108,31 +103,27 @@ TEST_P(TransportTest, QueueWrites) {
       [&](std::shared_ptr<Connection> conn) {
         writeScheduledProm.get_future().get();
         for (int i = 0; i < numMsg; ++i) {
-          this->doRead(
-              conn,
-              [&, conn, i](const Error& error, const void* ptr, size_t len) {
-                ASSERT_FALSE(error) << error.what();
-                ASSERT_EQ(len, numBytes);
-                if (i == numMsg - 1) {
-                  readCompletedProm.set_value();
-                }
-              });
+          this->doRead(conn, [&, conn, i](const Error& error, const void* ptr,
+                                          size_t len) {
+            ASSERT_FALSE(error) << error.what();
+            ASSERT_EQ(len, numBytes);
+            if (i == numMsg - 1) {
+              readCompletedProm.set_value();
+            }
+          });
         }
         writeCompletedFuture.wait();
         readCompletedFuture.wait();
       },
       [&](std::shared_ptr<Connection> conn) {
         for (int i = 0; i < numMsg; ++i) {
-          this->doWrite(
-              conn,
-              garbage.data(),
-              garbage.size(),
-              [&, conn, i](const Error& error) {
-                ASSERT_FALSE(error) << error.what();
-                if (i == numMsg - 1) {
-                  writeCompletedProm.set_value();
-                }
-              });
+          this->doWrite(conn, garbage.data(), garbage.size(),
+                        [&, conn, i](const Error& error) {
+                          ASSERT_FALSE(error) << error.what();
+                          if (i == numMsg - 1) {
+                            writeCompletedProm.set_value();
+                          }
+                        });
         }
         writeScheduledProm.set_value();
         writeCompletedFuture.wait();

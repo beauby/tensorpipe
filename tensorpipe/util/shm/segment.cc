@@ -77,15 +77,13 @@ update to obtain the latest correctness checks."
   return shm;
 }
 
-} // namespace
+}  // namespace
 
 // Mention static constexpr char to export the symbol.
 constexpr char Segment::kBasePath[];
 
-Segment::Segment(
-    size_t byte_size,
-    bool perm_write,
-    optional<PageType> page_type)
+Segment::Segment(size_t byte_size, bool perm_write,
+                 optional<PageType> page_type)
     : fd_{createShmFd()}, byte_size_{byte_size}, base_ptr_{nullptr} {
   // grow size to contain byte_size bytes.
   off_t len = static_cast<off_t>(byte_size_);
@@ -131,6 +129,6 @@ Segment::~Segment() {
   ::close(fd_);
 }
 
-} // namespace shm
-} // namespace util
-} // namespace tensorpipe
+}  // namespace shm
+}  // namespace util
+}  // namespace tensorpipe

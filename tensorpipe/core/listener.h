@@ -39,14 +39,11 @@ class Listener final : public std::enable_shared_from_this<Listener> {
   struct ConstructorToken {};
 
  public:
-  static std::shared_ptr<Listener> create(
-      std::shared_ptr<Context>,
-      const std::vector<std::string>&);
+  static std::shared_ptr<Listener> create(std::shared_ptr<Context>,
+                                          const std::vector<std::string>&);
 
-  Listener(
-      ConstructorToken,
-      std::shared_ptr<Context>,
-      const std::vector<std::string>&);
+  Listener(ConstructorToken, std::shared_ptr<Context>,
+           const std::vector<std::string>&);
 
   //
   // Entry points for user code
@@ -89,8 +86,8 @@ class Listener final : public std::enable_shared_from_this<Listener> {
   mutable std::mutex mutex_;
   using TLock = std::unique_lock<std::mutex>&;
 
-  using connection_request_callback_fn = std::function<
-      void(const Error&, std::string, std::shared_ptr<transport::Connection>)>;
+  using connection_request_callback_fn = std::function<void(
+      const Error&, std::string, std::shared_ptr<transport::Connection>)>;
 
   Error error_;
 
@@ -99,14 +96,9 @@ class Listener final : public std::enable_shared_from_this<Listener> {
       listeners_;
   std::map<std::string, transport::address_t> addresses_;
   RearmableCallbackWithExternalLock<
-      std::function<void(
-          const Error&,
-          std::string,
-          std::shared_ptr<transport::Connection>,
-          TLock)>,
-      const Error&,
-      std::string,
-      std::shared_ptr<transport::Connection>>
+      std::function<void(const Error&, std::string,
+                         std::shared_ptr<transport::Connection>, TLock)>,
+      const Error&, std::string, std::shared_ptr<transport::Connection>>
       acceptCallback_;
 
   // Needed to keep them alive.
@@ -148,19 +140,13 @@ class Listener final : public std::enable_shared_from_this<Listener> {
   // Helpers to schedule our callbacks into user code
   //
 
-  void triggerAcceptCallback_(
-      accept_callback_fn,
-      const Error&,
-      std::string,
-      std::shared_ptr<transport::Connection>,
-      TLock);
+  void triggerAcceptCallback_(accept_callback_fn, const Error&, std::string,
+                              std::shared_ptr<transport::Connection>, TLock);
 
-  void triggerConnectionRequestCallback_(
-      connection_request_callback_fn,
-      const Error&,
-      std::string,
-      std::shared_ptr<transport::Connection>,
-      TLock);
+  void triggerConnectionRequestCallback_(connection_request_callback_fn,
+                                         const Error&, std::string,
+                                         std::shared_ptr<transport::Connection>,
+                                         TLock);
 
   //
   // Error handling
@@ -174,11 +160,9 @@ class Listener final : public std::enable_shared_from_this<Listener> {
 
   void armListener_(std::string, TLock);
   void onAccept_(std::string, std::shared_ptr<transport::Connection>, TLock);
-  void onConnectionHelloRead_(
-      std::string,
-      std::shared_ptr<transport::Connection>,
-      const proto::Packet&,
-      TLock);
+  void onConnectionHelloRead_(std::string,
+                              std::shared_ptr<transport::Connection>,
+                              const proto::Packet&, TLock);
 
   friend class Context;
   friend class Pipe;
@@ -186,4 +170,4 @@ class Listener final : public std::enable_shared_from_this<Listener> {
   friend class CallbackWrapper;
 };
 
-} // namespace tensorpipe
+}  // namespace tensorpipe

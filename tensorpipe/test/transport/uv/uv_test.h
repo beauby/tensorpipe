@@ -17,7 +17,5 @@ class UVTransportTestHelper : public TransportTestHelper {
     return std::make_shared<tensorpipe::transport::uv::Context>();
   }
 
-  std::string defaultAddr() override {
-    return "127.0.0.1";
-  }
+  std::string defaultAddr() override { return "127.0.0.1"; }
 };

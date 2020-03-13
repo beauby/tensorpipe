@@ -116,6 +116,6 @@ void Loop::closeOneHandleFromLoop(uv_handle_t* uvHandle, void* /* unused */) {
   }
 }
 
-} // namespace uv
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace uv
+}  // namespace transport
+}  // namespace tensorpipe

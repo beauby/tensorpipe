@@ -37,13 +37,9 @@ class ExceptionThrower final {
   // Throw exception on destructor, when l-value instance goes of scope
   // and stream has been written. Use noexcept(false) to inform the compiler
   // that it's ok to throw in destructor.
-  ~ExceptionThrower() noexcept(false) {
-    throw ex_builder_(oss_.str() + "\"");
-  }
+  ~ExceptionThrower() noexcept(false) { throw ex_builder_(oss_.str() + "\""); }
 
-  std::ostream& getStream() {
-    return oss_;
-  }
+  std::ostream& getStream() { return oss_; }
 
  protected:
   std::function<TException(const std::string&)> ex_builder_;
@@ -67,18 +63,15 @@ class ExceptionThrower final {
 #define TP_THROW_SYSTEM(err) \
   TP_THROW(std::system_error, err, std::system_category())
 #define TP_THROW_SYSTEM_IF(cond, err) \
-  if (unlikely(cond))                 \
-  TP_THROW_SYSTEM(err)
+  if (unlikely(cond)) TP_THROW_SYSTEM(err)
 
 #define TP_THROW_SYSTEM_CODE(err) TP_THROW(std::system_error, err)
 #define TP_THROW_SYSTEM_CODE_IF(cond, err) \
-  if (unlikely(cond))                      \
-  TP_THROW_SYSTEM_CODE(err) << TP_STRINGIFY(cond)
+  if (unlikely(cond)) TP_THROW_SYSTEM_CODE(err) << TP_STRINGIFY(cond)
 
 #define TP_THROW_ASSERT() TP_THROW(std::runtime_error)
 #define TP_THROW_ASSERT_IF(cond) \
-  if (unlikely(cond))            \
-  TP_THROW_ASSERT() << TP_STRINGIFY(cond)
+  if (unlikely(cond)) TP_THROW_ASSERT() << TP_STRINGIFY(cond)
 
 // Conditional throwing exception
 #define TP_THROW_IF_NULLPTR(ptr) \
@@ -105,13 +98,9 @@ inline std::error_code toErrorCode(ssize_t e) {
 //
 class LogEntry final {
  public:
-  ~LogEntry() noexcept {
-    std::cerr << oss_.str() << std::endl;
-  }
+  ~LogEntry() noexcept { std::cerr << oss_.str() << std::endl; }
 
-  std::ostream& getStream() {
-    return oss_;
-  }
+  std::ostream& getStream() { return oss_; }
 
  protected:
   std::ostringstream oss_;
@@ -127,17 +116,13 @@ class LogEntry final {
   LogEntry().getStream() << "[tensorpipe error: " << TP_LOG_PREFFIX << "] "
 
 #define TP_LOG_DEBUG_IF(cond) \
-  if (unlikely(cond))         \
-  TP_LOG_DEBUG()
+  if (unlikely(cond)) TP_LOG_DEBUG()
 #define TP_LOG_INFO_IF(cond) \
-  if (unlikely(cond))        \
-  TP_LOG_INFO()
+  if (unlikely(cond)) TP_LOG_INFO()
 #define TP_LOG_WARNING_IF(cond) \
-  if (unlikely(cond))           \
-  TP_LOG_WARNING()
+  if (unlikely(cond)) TP_LOG_WARNING()
 #define TP_LOG_ERROR_IF(cond) \
-  if (unlikely(cond))         \
-  TP_LOG_ERROR()
+  if (unlikely(cond)) TP_LOG_ERROR()
 
 #define __TP_EXPAND_OPD(opd) TP_STRINGIFY(opd) << "(" << (opd) << ")"
 
@@ -160,16 +145,13 @@ class LogEntry final {
 #ifdef NDEBUG
 
 #define _TP_DLOG() \
-  while (false)    \
-  TP_LOG_DEBUG()
+  while (false) TP_LOG_DEBUG()
 
 #define _TP_DCHECK(a) \
-  while (false)       \
-  __TP_DCHECK(a)
+  while (false) __TP_DCHECK(a)
 
 #define _TP_DCHECK_CMP(a, b, op) \
-  while (false)                  \
-  __TP_DCHECK_CMP(a, b, op)
+  while (false) __TP_DCHECK_CMP(a, b, op)
 
 #else
 

@@ -31,9 +31,8 @@ class Listener final : public transport::Listener,
   struct ConstructorToken {};
 
  public:
-  static std::shared_ptr<Listener> create(
-      std::shared_ptr<Loop> loop,
-      const Sockaddr& addr);
+  static std::shared_ptr<Listener> create(std::shared_ptr<Loop> loop,
+                                          const Sockaddr& addr);
 
   using transport::Listener::accept_callback_fn;
 
@@ -55,6 +54,6 @@ class Listener final : public transport::Listener,
   std::deque<accept_callback_fn> fns_;
 };
 
-} // namespace shm
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace shm
+}  // namespace transport
+}  // namespace tensorpipe

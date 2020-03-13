@@ -20,25 +20,15 @@ class Measurements {
   using nanoseconds = std::chrono::nanoseconds;
 
  public:
-  void markStart() {
-    start_ = clock::now();
-  }
+  void markStart() { start_ = clock::now(); }
 
-  void markStop() {
-    samples_.push_back(clock::now() - start_);
-  }
+  void markStop() { samples_.push_back(clock::now() - start_); }
 
-  void sort() {
-    std::sort(samples_.begin(), samples_.end());
-  }
+  void sort() { std::sort(samples_.begin(), samples_.end()); }
 
-  void reserve(size_t capacity) {
-    samples_.reserve(capacity);
-  }
+  void reserve(size_t capacity) { samples_.reserve(capacity); }
 
-  size_t size() const {
-    return samples_.size();
-  }
+  size_t size() const { return samples_.size(); }
 
   nanoseconds sum() const {
     nanoseconds sum;
@@ -57,5 +47,5 @@ class Measurements {
   std::vector<nanoseconds> samples_;
 };
 
-} // namespace benchmark
-} // namespace tensorpipe
+}  // namespace benchmark
+}  // namespace tensorpipe

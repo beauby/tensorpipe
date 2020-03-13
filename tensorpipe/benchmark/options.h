@@ -14,14 +14,14 @@ namespace tensorpipe {
 namespace benchmark {
 
 struct Options {
-  std::string mode; // server or client
-  std::string transport; // shm or uv
-  std::string address; // address for listen or connect
-  int ioNum{0}; // number of write/read pairs
+  std::string mode;       // server or client
+  std::string transport;  // shm or uv
+  std::string address;    // address for listen or connect
+  int ioNum{0};           // number of write/read pairs
   size_t chunkBytes{8};
 };
 
 struct Options parseOptions(int argc, char** argv);
 
-} // namespace benchmark
-} // namespace tensorpipe
+}  // namespace benchmark
+}  // namespace tensorpipe

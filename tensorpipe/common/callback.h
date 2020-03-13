@@ -47,13 +47,11 @@ auto cb_apply(F&& f, T&& t, std::index_sequence<I...>) {
 
 template <typename F, typename T>
 auto cb_apply(F&& f, T&& t) {
-  return cb_apply(
-      std::move(f),
-      std::forward<T>(t),
-      std::make_index_sequence<std::tuple_size<T>::value>{});
+  return cb_apply(std::move(f), std::forward<T>(t),
+                  std::make_index_sequence<std::tuple_size<T>::value>{});
 }
 
-} // namespace
+}  // namespace
 
 // A wrapper for a callback that "burns out" after it fires and thus needs to be
 // rearmed every time. Invocations that are triggered while the callback is
@@ -121,9 +119,8 @@ class RearmableCallbackWithExternalLock {
     if (!args_.empty()) {
       TStoredArgs args{std::move(args_.front())};
       args_.pop_front();
-      cb_apply(
-          std::move(f),
-          std::tuple_cat(std::move(args), std::forward_as_tuple(lock)));
+      cb_apply(std::move(f),
+               std::tuple_cat(std::move(args), std::forward_as_tuple(lock)));
     } else {
       callbacks_.push_back(std::move(f));
     }
@@ -134,9 +131,8 @@ class RearmableCallbackWithExternalLock {
     if (!callbacks_.empty()) {
       F f{std::move(callbacks_.front())};
       callbacks_.pop_front();
-      cb_apply(
-          std::move(f),
-          std::tuple<Args..., TLock>(std::forward<Args>(args)..., lock));
+      cb_apply(std::move(f),
+               std::tuple<Args..., TLock>(std::forward<Args>(args)..., lock));
     } else {
       args_.emplace_back(std::forward<Args>(args)...);
     }
@@ -178,19 +174,16 @@ class CallbackWrapper {
         std::function<void(T&, const Error&, Args...)>(
             [this, callback{std::move(callback)}](
                 T& subject, const Error& error, Args... args) mutable {
-              this->entryPoint_(
-                  subject, std::move(callback), error, std::move(args)...);
+              this->entryPoint_(subject, std::move(callback), error,
+                                std::move(args)...);
             }));
   }
 
  private:
   std::enable_shared_from_this<T>& subject_;
 
-  void entryPoint_(
-      T& subject,
-      TBoundCallback callback,
-      const Error& error,
-      Args... args) {
+  void entryPoint_(T& subject, TBoundCallback callback, const Error& error,
+                   Args... args) {
     std::unique_lock<std::mutex> lock(subject.mutex_);
     if (processError_(subject, error, lock)) {
       return;
@@ -221,4 +214,4 @@ class CallbackWrapper {
   }
 };
 
-} // namespace tensorpipe
+}  // namespace tensorpipe

@@ -19,9 +19,7 @@ void ChannelFactory::join() {}
 
 ChannelFactory::~ChannelFactory() {}
 
-const std::string& ChannelFactory::name() const {
-  return name_;
-}
+const std::string& ChannelFactory::name() const { return name_; }
 
-} // namespace channel
-} // namespace tensorpipe
+}  // namespace channel
+}  // namespace tensorpipe

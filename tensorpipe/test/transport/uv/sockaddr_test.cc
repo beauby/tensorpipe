@@ -34,13 +34,13 @@ int port(const uv::Sockaddr& addr) {
   return -1;
 }
 
-} // namespace
+}  // namespace
 
 TEST(Sockaddr, InetBadPort) {
-  ASSERT_THROW(
-      uv::Sockaddr::createInetSockAddr("1.2.3.4:-1"), std::invalid_argument);
-  ASSERT_THROW(
-      uv::Sockaddr::createInetSockAddr("1.2.3.4:65536"), std::invalid_argument);
+  ASSERT_THROW(uv::Sockaddr::createInetSockAddr("1.2.3.4:-1"),
+               std::invalid_argument);
+  ASSERT_THROW(uv::Sockaddr::createInetSockAddr("1.2.3.4:65536"),
+               std::invalid_argument);
 }
 
 TEST(Sockaddr, Inet) {
@@ -67,12 +67,12 @@ TEST(Sockaddr, Inet) {
 }
 
 TEST(Sockaddr, Inet6BadPort) {
-  ASSERT_THROW(
-      uv::Sockaddr::createInetSockAddr("[::1]:-1"), std::invalid_argument);
-  ASSERT_THROW(
-      uv::Sockaddr::createInetSockAddr("[::1]:65536"), std::invalid_argument);
-  ASSERT_THROW(
-      uv::Sockaddr::createInetSockAddr("]::1["), std::invalid_argument);
+  ASSERT_THROW(uv::Sockaddr::createInetSockAddr("[::1]:-1"),
+               std::invalid_argument);
+  ASSERT_THROW(uv::Sockaddr::createInetSockAddr("[::1]:65536"),
+               std::invalid_argument);
+  ASSERT_THROW(uv::Sockaddr::createInetSockAddr("]::1["),
+               std::invalid_argument);
 }
 
 TEST(Sockaddr, Inet6) {

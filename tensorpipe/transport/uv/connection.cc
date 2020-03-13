@@ -121,9 +121,7 @@ void ReadOperation::readFromLoop(ssize_t nread, const uv_buf_t* buf) {
   }
 }
 
-bool ReadOperation::completeFromLoop() const {
-  return mode_ == COMPLETE;
-}
+bool ReadOperation::completeFromLoop() const { return mode_ == COMPLETE; }
 
 void ReadOperation::callbackFromLoop(const Error& error) {
   fn_(error, ptr_, readLength_);
@@ -157,10 +155,8 @@ class WriteOperation {
   write_callback_fn fn_;
 };
 
-WriteOperation::WriteOperation(
-    const void* ptr,
-    size_t length,
-    write_callback_fn fn)
+WriteOperation::WriteOperation(const void* ptr, size_t length,
+                               write_callback_fn fn)
     : ptr_(static_cast<const char*>(ptr)), length_(length), fn_(std::move(fn)) {
   bufs_[0].base = const_cast<char*>(reinterpret_cast<const char*>(&length_));
   bufs_[0].len = sizeof(length_);
@@ -172,11 +168,9 @@ std::tuple<uv_buf_t*, unsigned int> WriteOperation::getBufs() {
   return std::make_tuple(bufs_.data(), bufs_.size());
 }
 
-void WriteOperation::callbackFromLoop(const Error& error) {
-  fn_(error);
-}
+void WriteOperation::callbackFromLoop(const Error& error) { fn_(error); }
 
-} // namespace
+}  // namespace
 
 class Connection::Impl : public std::enable_shared_from_this<Connection::Impl> {
  public:
@@ -221,9 +215,8 @@ class Connection::Impl : public std::enable_shared_from_this<Connection::Impl> {
   std::shared_ptr<Impl> leak_;
 };
 
-Connection::Impl::Impl(
-    std::shared_ptr<Loop> loop,
-    std::shared_ptr<TCPHandle> handle)
+Connection::Impl::Impl(std::shared_ptr<Loop> loop,
+                       std::shared_ptr<TCPHandle> handle)
     : loop_(std::move(loop)), handle_(std::move(handle)) {}
 
 void Connection::Impl::initFromLoop() {
@@ -253,10 +246,8 @@ void Connection::Impl::readFromLoop(read_callback_fn fn) {
   }
 }
 
-void Connection::Impl::readFromLoop(
-    void* ptr,
-    size_t length,
-    read_callback_fn fn) {
+void Connection::Impl::readFromLoop(void* ptr, size_t length,
+                                    read_callback_fn fn) {
   TP_DCHECK(loop_->inLoopThread());
 
   if (error_) {
@@ -272,10 +263,8 @@ void Connection::Impl::readFromLoop(
   }
 }
 
-void Connection::Impl::writeFromLoop(
-    const void* ptr,
-    size_t length,
-    write_callback_fn fn) {
+void Connection::Impl::writeFromLoop(const void* ptr, size_t length,
+                                     write_callback_fn fn) {
   TP_DCHECK(loop_->inLoopThread());
 
   if (error_) {
@@ -305,9 +294,8 @@ void Connection::Impl::allocCallbackFromLoop_(uv_buf_t* buf) {
   readOperations_.front().allocFromLoop(buf);
 }
 
-void Connection::Impl::readCallbackFromLoop_(
-    ssize_t nread,
-    const uv_buf_t* buf) {
+void Connection::Impl::readCallbackFromLoop_(ssize_t nread,
+                                             const uv_buf_t* buf) {
   TP_DCHECK(loop_->inLoopThread());
   if (nread < 0) {
     if (!error_) {
@@ -361,33 +349,30 @@ void Connection::Impl::closeCallbackFromLoop_() {
   leak_.reset();
 }
 
-std::shared_ptr<Connection> Connection::create_(
-    std::shared_ptr<Loop> loop,
-    const Sockaddr& addr) {
+std::shared_ptr<Connection> Connection::create_(std::shared_ptr<Loop> loop,
+                                                const Sockaddr& addr) {
   auto handle = TCPHandle::create(loop);
   loop->deferToLoop([handle, addr]() {
     handle->initFromLoop();
     handle->connectFromLoop(addr);
   });
-  auto conn = std::make_shared<Connection>(
-      ConstructorToken(), std::move(loop), std::move(handle));
+  auto conn = std::make_shared<Connection>(ConstructorToken(), std::move(loop),
+                                           std::move(handle));
   conn->init_();
   return conn;
 }
 
 std::shared_ptr<Connection> Connection::create_(
-    std::shared_ptr<Loop> loop,
-    std::shared_ptr<TCPHandle> handle) {
-  auto conn = std::make_shared<Connection>(
-      ConstructorToken(), std::move(loop), std::move(handle));
+    std::shared_ptr<Loop> loop, std::shared_ptr<TCPHandle> handle) {
+  auto conn = std::make_shared<Connection>(ConstructorToken(), std::move(loop),
+                                           std::move(handle));
   conn->init_();
   return conn;
 }
 
-Connection::Connection(
-    ConstructorToken /* unused */,
-    std::shared_ptr<Loop> loop,
-    std::shared_ptr<TCPHandle> handle)
+Connection::Connection(ConstructorToken /* unused */,
+                       std::shared_ptr<Loop> loop,
+                       std::shared_ptr<TCPHandle> handle)
     : loop_(loop), impl_(std::make_shared<Impl>(loop, std::move(handle))) {}
 
 void Connection::init_() {
@@ -416,6 +401,6 @@ Connection::~Connection() {
   loop_->deferToLoop([impl{impl_}]() { impl->closeFromLoop(); });
 }
 
-} // namespace uv
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace uv
+}  // namespace transport
+}  // namespace tensorpipe

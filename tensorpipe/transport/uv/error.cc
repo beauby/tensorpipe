@@ -22,6 +22,6 @@ std::string UVError::what() const {
   return ss.str();
 }
 
-} // namespace uv
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace uv
+}  // namespace transport
+}  // namespace tensorpipe

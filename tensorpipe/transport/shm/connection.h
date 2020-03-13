@@ -43,14 +43,11 @@ class Connection final : public transport::Connection,
   };
 
  public:
-  static std::shared_ptr<Connection> create(
-      std::shared_ptr<Loop> loop,
-      std::shared_ptr<Socket> socket);
+  static std::shared_ptr<Connection> create(std::shared_ptr<Loop> loop,
+                                            std::shared_ptr<Socket> socket);
 
-  Connection(
-      ConstructorToken,
-      std::shared_ptr<Loop> loop,
-      std::shared_ptr<Socket> socket);
+  Connection(ConstructorToken, std::shared_ptr<Loop> loop,
+             std::shared_ptr<Socket> socket);
 
   ~Connection() override;
 
@@ -62,8 +59,8 @@ class Connection final : public transport::Connection,
   void read(read_callback_fn fn) override;
 
   // Implementation of transport::Connection.
-  void read(google::protobuf::MessageLite& message, read_proto_callback_fn fn)
-      override;
+  void read(google::protobuf::MessageLite& message,
+            read_proto_callback_fn fn) override;
 
   // Implementation of transport::Connection.
   void read(void* ptr, size_t length, read_callback_fn fn) override;
@@ -72,8 +69,8 @@ class Connection final : public transport::Connection,
   void write(const void* ptr, size_t length, write_callback_fn fn) override;
 
   // Implementation of transport::Connection
-  void write(const google::protobuf::MessageLite& message, write_callback_fn fn)
-      override;
+  void write(const google::protobuf::MessageLite& message,
+             write_callback_fn fn) override;
 
   // Implementation of EventHandler.
   void handleEventsFromReactor(int events) override;
@@ -234,6 +231,6 @@ class Connection final : public transport::Connection,
   void closeHoldingMutex();
 };
 
-} // namespace shm
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace shm
+}  // namespace transport
+}  // namespace tensorpipe

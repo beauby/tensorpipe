@@ -23,7 +23,7 @@
 #include <tensorpipe/core/pipe.h>
 #ifdef TP_ENABLE_SHM
 #include <tensorpipe/transport/shm/context.h>
-#endif // TP_ENABLE_SHM
+#endif  // TP_ENABLE_SHM
 #include <tensorpipe/transport/uv/context.h>
 
 namespace py = pybind11;
@@ -50,26 +50,16 @@ class BufferWrapper {
 
   BufferWrapper& operator=(BufferWrapper&& other) = delete;
 
-  ~BufferWrapper() {
-    PyBuffer_Release(&buffer_);
-  }
+  ~BufferWrapper() { PyBuffer_Release(&buffer_); }
 
-  void* ptr() const {
-    return buffer_.buf;
-  }
+  void* ptr() const { return buffer_.buf; }
 
-  size_t length() const {
-    return buffer_.len;
-  }
+  size_t length() const { return buffer_.len; }
 
   py::buffer_info getBuffer() {
-    return py::buffer_info(
-        buffer_.buf,
-        1,
-        py::format_descriptor<unsigned char>::format(),
-        1,
-        {static_cast<size_t>(buffer_.len)},
-        {1});
+    return py::buffer_info(buffer_.buf, 1,
+                           py::format_descriptor<unsigned char>::format(), 1,
+                           {static_cast<size_t>(buffer_.len)}, {1});
   }
 
  private:
@@ -91,10 +81,8 @@ class OutgoingMessage {
   BufferWrapper metadata;
   std::vector<std::shared_ptr<OutgoingTensor>> tensors;
 
-  OutgoingMessage(
-      const py::buffer& buffer,
-      const py::buffer& metadata,
-      const std::vector<std::shared_ptr<OutgoingTensor>>& tensors)
+  OutgoingMessage(const py::buffer& buffer, const py::buffer& metadata,
+                  const std::vector<std::shared_ptr<OutgoingTensor>>& tensors)
       : buffer(buffer, PyBUF_SIMPLE),
         metadata(metadata, PyBUF_SIMPLE),
         tensors(tensors) {}
@@ -144,10 +132,8 @@ class IncomingMessage {
   py::bytes metadata;
   std::vector<std::shared_ptr<IncomingTensor>> tensors;
 
-  IncomingMessage(
-      size_t length,
-      py::bytes metadata,
-      std::vector<std::shared_ptr<IncomingTensor>> tensors)
+  IncomingMessage(size_t length, py::bytes metadata,
+                  std::vector<std::shared_ptr<IncomingTensor>> tensors)
       : length(length), metadata(metadata), tensors(tensors) {}
 
   void set_buffer(const py::buffer& pyBuffer) {
@@ -200,7 +186,7 @@ template <typename T>
 using channel_factory_class_ =
     py::class_<T, tensorpipe::channel::ChannelFactory, std::shared_ptr<T>>;
 
-} // namespace
+}  // namespace
 
 PYBIND11_MODULE(pytensorpipe, module) {
   py::print(
@@ -212,33 +198,27 @@ PYBIND11_MODULE(pytensorpipe, module) {
   shared_ptr_class_<tensorpipe::Pipe> pipe(module, "Pipe");
 
   shared_ptr_class_<OutgoingTensor> outgoingTensor(module, "OutgoingTensor");
-  outgoingTensor.def(
-      py::init<py::buffer, py::buffer>(),
-      py::arg("buffer"),
-      py::arg("metadata"));
+  outgoingTensor.def(py::init<py::buffer, py::buffer>(), py::arg("buffer"),
+                     py::arg("metadata"));
   shared_ptr_class_<OutgoingMessage> outgoingMessage(module, "OutgoingMessage");
   outgoingMessage.def(
-      py::init<
-          py::buffer,
-          py::buffer,
-          const std::vector<std::shared_ptr<OutgoingTensor>>>(),
-      py::arg("buffer"),
-      py::arg("metadata"),
-      py::arg("tensors"));
+      py::init<py::buffer, py::buffer,
+               const std::vector<std::shared_ptr<OutgoingTensor>>>(),
+      py::arg("buffer"), py::arg("metadata"), py::arg("tensors"));
 
-  shared_ptr_class_<IncomingTensor> incomingTensor(
-      module, "IncomingTensor", py::buffer_protocol());
+  shared_ptr_class_<IncomingTensor> incomingTensor(module, "IncomingTensor",
+                                                   py::buffer_protocol());
   incomingTensor.def_readonly("length", &IncomingTensor::length);
   incomingTensor.def_readonly("metadata", &IncomingTensor::metadata);
-  incomingTensor.def_property(
-      "buffer",
-      [](IncomingTensor& pyTensor) -> py::buffer_info {
-        TP_THROW_ASSERT_IF(!pyTensor.buffer.has_value()) << "No buffer";
-        return pyTensor.buffer->getBuffer();
-      },
-      &IncomingTensor::set_buffer);
-  shared_ptr_class_<IncomingMessage> incomingMessage(
-      module, "IncomingMessage", py::buffer_protocol());
+  incomingTensor.def_property("buffer",
+                              [](IncomingTensor& pyTensor) -> py::buffer_info {
+                                TP_THROW_ASSERT_IF(!pyTensor.buffer.has_value())
+                                    << "No buffer";
+                                return pyTensor.buffer->getBuffer();
+                              },
+                              &IncomingTensor::set_buffer);
+  shared_ptr_class_<IncomingMessage> incomingMessage(module, "IncomingMessage",
+                                                     py::buffer_protocol());
   incomingMessage.def_readonly("length", &IncomingMessage::length);
   incomingMessage.def_readonly("metadata", &IncomingMessage::metadata);
   incomingMessage.def_readonly("tensors", &IncomingMessage::tensors);
@@ -253,101 +233,91 @@ PYBIND11_MODULE(pytensorpipe, module) {
   // Creators.
 
   context.def(py::init(&tensorpipe::Context::create));
-  listener.def(
-      py::init(&tensorpipe::Listener::create),
-      py::arg("context"),
-      py::arg("urls"));
-  pipe.def(
-      py::init(&tensorpipe::Pipe::create), py::arg("context"), py::arg("url"));
+  listener.def(py::init(&tensorpipe::Listener::create), py::arg("context"),
+               py::arg("urls"));
+  pipe.def(py::init(&tensorpipe::Pipe::create), py::arg("context"),
+           py::arg("url"));
 
   context.def("join", &tensorpipe::Context::join);
 
   // Callback registration.
 
-  listener.def(
-      "listen",
-      [](std::shared_ptr<tensorpipe::Listener> listener, py::object callback) {
-        listener->accept([callback{std::move(callback)}](
-                             const tensorpipe::Error& error,
-                             std::shared_ptr<tensorpipe::Pipe> pipe) {
-          if (error) {
-            TP_LOG_ERROR() << error.what();
-            return;
-          }
-          TP_THROW_ASSERT_IF(!pipe) << "No pipe";
-          py::gil_scoped_acquire acquire;
-          try {
-            callback(std::move(pipe));
-          } catch (const py::error_already_set& err) {
-            TP_LOG_ERROR() << "Callback raised exception: " << err.what();
-          }
-        });
-      });
+  listener.def("listen", [](std::shared_ptr<tensorpipe::Listener> listener,
+                            py::object callback) {
+    listener->accept([callback{std::move(callback)}](
+                         const tensorpipe::Error& error,
+                         std::shared_ptr<tensorpipe::Pipe> pipe) {
+      if (error) {
+        TP_LOG_ERROR() << error.what();
+        return;
+      }
+      TP_THROW_ASSERT_IF(!pipe) << "No pipe";
+      py::gil_scoped_acquire acquire;
+      try {
+        callback(std::move(pipe));
+      } catch (const py::error_already_set& err) {
+        TP_LOG_ERROR() << "Callback raised exception: " << err.what();
+      }
+    });
+  });
 
-  pipe.def(
-      "read_descriptor",
-      [](std::shared_ptr<tensorpipe::Pipe> pipe, py::object callback) {
-        pipe->readDescriptor(
-            [callback{std::move(callback)}](
-                const tensorpipe::Error& error, tensorpipe::Message message) {
-              if (error) {
-                TP_LOG_ERROR() << error.what();
-                return;
-              }
-              py::gil_scoped_acquire acquire;
-              try {
-                callback(prepareToAllocate(std::move(message)));
-              } catch (const py::error_already_set& err) {
-                TP_LOG_ERROR() << "Callback raised exception: " << err.what();
-              }
-            });
-      });
+  pipe.def("read_descriptor",
+           [](std::shared_ptr<tensorpipe::Pipe> pipe, py::object callback) {
+             pipe->readDescriptor([callback{std::move(callback)}](
+                                      const tensorpipe::Error& error,
+                                      tensorpipe::Message message) {
+               if (error) {
+                 TP_LOG_ERROR() << error.what();
+                 return;
+               }
+               py::gil_scoped_acquire acquire;
+               try {
+                 callback(prepareToAllocate(std::move(message)));
+               } catch (const py::error_already_set& err) {
+                 TP_LOG_ERROR() << "Callback raised exception: " << err.what();
+               }
+             });
+           });
 
-  pipe.def(
-      "read",
-      [](std::shared_ptr<tensorpipe::Pipe> pipe,
-         std::shared_ptr<IncomingMessage> pyMessage,
-         py::object callback) {
-        tensorpipe::Message tpMessage = prepareToRead(std::move(pyMessage));
-        pipe->read(
-            std::move(tpMessage),
-            [callback{std::move(callback)}](
-                const tensorpipe::Error& error, tensorpipe::Message tpMessage) {
-              if (error) {
-                TP_LOG_ERROR() << error.what();
-                return;
-              }
-              py::gil_scoped_acquire acquire;
-              try {
-                callback();
-              } catch (const py::error_already_set& err) {
-                TP_LOG_ERROR() << "Callback raised exception: " << err.what();
-              }
-            });
-      });
+  pipe.def("read", [](std::shared_ptr<tensorpipe::Pipe> pipe,
+                      std::shared_ptr<IncomingMessage> pyMessage,
+                      py::object callback) {
+    tensorpipe::Message tpMessage = prepareToRead(std::move(pyMessage));
+    pipe->read(std::move(tpMessage), [callback{std::move(callback)}](
+                                         const tensorpipe::Error& error,
+                                         tensorpipe::Message tpMessage) {
+      if (error) {
+        TP_LOG_ERROR() << error.what();
+        return;
+      }
+      py::gil_scoped_acquire acquire;
+      try {
+        callback();
+      } catch (const py::error_already_set& err) {
+        TP_LOG_ERROR() << "Callback raised exception: " << err.what();
+      }
+    });
+  });
 
-  pipe.def(
-      "write",
-      [](std::shared_ptr<tensorpipe::Pipe> pipe,
-         std::shared_ptr<OutgoingMessage> pyMessage,
-         py::object callback) {
-        tensorpipe::Message tpMessage = prepareToWrite(std::move(pyMessage));
-        pipe->write(
-            std::move(tpMessage),
-            [callback{std::move(callback)}](
-                const tensorpipe::Error& error, tensorpipe::Message tpMessage) {
-              if (error) {
-                TP_LOG_ERROR() << error.what();
-                return;
-              }
-              py::gil_scoped_acquire acquire;
-              try {
-                callback();
-              } catch (const py::error_already_set& err) {
-                TP_LOG_ERROR() << "Callback raised exception: " << err.what();
-              }
-            });
-      });
+  pipe.def("write", [](std::shared_ptr<tensorpipe::Pipe> pipe,
+                       std::shared_ptr<OutgoingMessage> pyMessage,
+                       py::object callback) {
+    tensorpipe::Message tpMessage = prepareToWrite(std::move(pyMessage));
+    pipe->write(std::move(tpMessage), [callback{std::move(callback)}](
+                                          const tensorpipe::Error& error,
+                                          tensorpipe::Message tpMessage) {
+      if (error) {
+        TP_LOG_ERROR() << error.what();
+        return;
+      }
+      py::gil_scoped_acquire acquire;
+      try {
+        callback();
+      } catch (const py::error_already_set& err) {
+        TP_LOG_ERROR() << "Callback raised exception: " << err.what();
+      }
+    });
+  });
 
   // Transports and channels
 
@@ -362,14 +332,10 @@ PYBIND11_MODULE(pytensorpipe, module) {
   transport_class_<tensorpipe::transport::shm::Context> shmTransport(
       module, "ShmTransport");
   shmTransport.def(py::init<>());
-#endif // TP_ENABLE_SHM
+#endif  // TP_ENABLE_SHM
 
-  context.def(
-      "register_transport",
-      &tensorpipe::Context::registerTransport,
-      py::arg("priority"),
-      py::arg("name"),
-      py::arg("transport"));
+  context.def("register_transport", &tensorpipe::Context::registerTransport,
+              py::arg("priority"), py::arg("name"), py::arg("transport"));
 
   shared_ptr_class_<tensorpipe::channel::ChannelFactory> AbstractChannel(
       module, "AbstractChannel");
@@ -378,12 +344,8 @@ PYBIND11_MODULE(pytensorpipe, module) {
       basicChannel(module, "BasicChannel");
   basicChannel.def(py::init<>());
 
-  context.def(
-      "register_channel",
-      &tensorpipe::Context::registerChannelFactory,
-      py::arg("priority"),
-      py::arg("name"),
-      py::arg("channel"));
+  context.def("register_channel", &tensorpipe::Context::registerChannelFactory,
+              py::arg("priority"), py::arg("name"), py::arg("channel"));
 
   // Helpers
 

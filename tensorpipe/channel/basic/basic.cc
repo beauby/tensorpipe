@@ -36,9 +36,8 @@ std::shared_ptr<Channel> BasicChannelFactory::createChannel(
   return channel;
 }
 
-BasicChannel::BasicChannel(
-    ConstructorToken /* unused */,
-    std::shared_ptr<transport::Connection> connection)
+BasicChannel::BasicChannel(ConstructorToken /* unused */,
+                           std::shared_ptr<transport::Connection> connection)
     : connection_(std::move(connection)),
       readCallbackWrapper_(*this),
       readProtoCallbackWrapper_(*this),
@@ -48,10 +47,8 @@ BasicChannel::BasicChannel(
   // itself isn't usable when the constructor is still being executed.
 }
 
-BasicChannel::TDescriptor BasicChannel::send(
-    const void* ptr,
-    size_t length,
-    TSendCallback callback) {
+BasicChannel::TDescriptor BasicChannel::send(const void* ptr, size_t length,
+                                             TSendCallback callback) {
   proto::Descriptor pbDescriptor;
 
   {
@@ -66,11 +63,8 @@ BasicChannel::TDescriptor BasicChannel::send(
 }
 
 // Receive memory region from peer.
-void BasicChannel::recv(
-    TDescriptor descriptor,
-    void* ptr,
-    size_t length,
-    TRecvCallback callback) {
+void BasicChannel::recv(TDescriptor descriptor, void* ptr, size_t length,
+                        TRecvCallback callback) {
   const auto pbDescriptor = loadDescriptor<proto::Descriptor>(descriptor);
   const auto id = pbDescriptor.operation_id();
 
@@ -84,10 +78,9 @@ void BasicChannel::recv(
   auto packet = std::make_shared<proto::Packet>();
   proto::Request* pbRequest = packet->mutable_request();
   pbRequest->set_operation_id(id);
-  connection_->write(
-      *packet,
-      writeCallbackWrapper_(
-          [packet](BasicChannel& /* unused */, TLock /* unused */) {}));
+  connection_->write(*packet,
+                     writeCallbackWrapper_([packet](BasicChannel& /* unused */,
+                                                    TLock /* unused */) {}));
   return;
 }
 
@@ -99,11 +92,10 @@ void BasicChannel::init_() {
 void BasicChannel::readPacket_(TLock lock) {
   TP_DCHECK(lock.owns_lock() && lock.mutex() == &mutex_);
   auto packet = std::make_shared<proto::Packet>();
-  connection_->read(
-      *packet,
-      readProtoCallbackWrapper_([packet](BasicChannel& channel, TLock lock) {
-        channel.onPacket_(*packet, lock);
-      }));
+  connection_->read(*packet, readProtoCallbackWrapper_(
+                                 [packet](BasicChannel& channel, TLock lock) {
+                                   channel.onPacket_(*packet, lock);
+                                 }));
 }
 
 void BasicChannel::onPacket_(const proto::Packet& packet, TLock lock) {
@@ -124,10 +116,8 @@ void BasicChannel::onRequest_(const proto::Request& request, TLock lock) {
   TP_DCHECK(lock.owns_lock() && lock.mutex() == &mutex_);
   // Find the send operation matching the request's operation ID.
   const auto id = request.operation_id();
-  auto it = std::find_if(
-      sendOperations_.begin(), sendOperations_.end(), [id](const auto& op) {
-        return op.id == id;
-      });
+  auto it = std::find_if(sendOperations_.begin(), sendOperations_.end(),
+                         [id](const auto& op) { return op.id == id; });
   TP_THROW_ASSERT_IF(it == sendOperations_.end())
       << "Expected send operation with ID " << id << " to exist.";
 
@@ -138,15 +128,13 @@ void BasicChannel::onRequest_(const proto::Request& request, TLock lock) {
   auto pbPacketOut = std::make_shared<proto::Packet>();
   proto::Reply* pbReply = pbPacketOut->mutable_reply();
   pbReply->set_operation_id(id);
-  connection_->write(
-      *pbPacketOut,
-      writeCallbackWrapper_(
-          [pbPacketOut](BasicChannel& /* unused */, TLock /* unused */) {}));
+  connection_->write(*pbPacketOut, writeCallbackWrapper_(
+                                       [pbPacketOut](BasicChannel& /* unused */,
+                                                     TLock /* unused */) {}));
 
   // Write payload.
   connection_->write(
-      op.ptr,
-      op.length,
+      op.ptr, op.length,
       writeCallbackWrapper_([id](BasicChannel& channel, TLock lock) {
         channel.sendCompleted(id, lock);
       }));
@@ -156,10 +144,8 @@ void BasicChannel::onReply_(const proto::Reply& reply, TLock lock) {
   TP_DCHECK(lock.owns_lock() && lock.mutex() == &mutex_);
   // Find the recv operation matching the reply's operation ID.
   const auto id = reply.operation_id();
-  auto it = std::find_if(
-      recvOperations_.begin(), recvOperations_.end(), [id](const auto& op) {
-        return op.id == id;
-      });
+  auto it = std::find_if(recvOperations_.begin(), recvOperations_.end(),
+                         [id](const auto& op) { return op.id == id; });
   TP_THROW_ASSERT_IF(it == recvOperations_.end())
       << "Expected recv operation with ID " << id << " to exist.";
 
@@ -168,22 +154,17 @@ void BasicChannel::onReply_(const proto::Reply& reply, TLock lock) {
 
   // Read payload into specified memory region.
   connection_->read(
-      op.ptr,
-      op.length,
-      readCallbackWrapper_(
-          [id](
-              BasicChannel& channel,
-              const void* /* unused */,
-              size_t /* unused */,
-              TLock lock) { channel.recvCompleted(id, lock); }));
+      op.ptr, op.length,
+      readCallbackWrapper_([id](BasicChannel& channel, const void* /* unused */,
+                                size_t /* unused */, TLock lock) {
+        channel.recvCompleted(id, lock);
+      }));
 }
 
 void BasicChannel::sendCompleted(const uint64_t id, TLock lock) {
   TP_DCHECK(lock.owns_lock() && lock.mutex() == &mutex_);
-  auto it = std::find_if(
-      sendOperations_.begin(), sendOperations_.end(), [id](const auto& op) {
-        return op.id == id;
-      });
+  auto it = std::find_if(sendOperations_.begin(), sendOperations_.end(),
+                         [id](const auto& op) { return op.id == id; });
   TP_THROW_ASSERT_IF(it == sendOperations_.end())
       << "Expected send operation with ID " << id << " to exist.";
 
@@ -198,10 +179,8 @@ void BasicChannel::sendCompleted(const uint64_t id, TLock lock) {
 
 void BasicChannel::recvCompleted(const uint64_t id, TLock lock) {
   TP_DCHECK(lock.owns_lock() && lock.mutex() == &mutex_);
-  auto it = std::find_if(
-      recvOperations_.begin(), recvOperations_.end(), [id](const auto& op) {
-        return op.id == id;
-      });
+  auto it = std::find_if(recvOperations_.begin(), recvOperations_.end(),
+                         [id](const auto& op) { return op.id == id; });
   TP_THROW_ASSERT_IF(it == recvOperations_.end())
       << "Expected recv operation with ID " << id << " to exist.";
 
@@ -235,6 +214,6 @@ void BasicChannel::handleError_(TLock lock) {
   }
 }
 
-} // namespace basic
-} // namespace channel
-} // namespace tensorpipe
+}  // namespace basic
+}  // namespace channel
+}  // namespace tensorpipe

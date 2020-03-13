@@ -19,7 +19,5 @@ class SHMTransportTestHelper : public TransportTestHelper {
     return std::make_shared<tensorpipe::transport::shm::Context>();
   }
 
-  std::string defaultAddr() override {
-    return createUniqueShmAddr();
-  }
+  std::string defaultAddr() override { return createUniqueShmAddr(); }
 };

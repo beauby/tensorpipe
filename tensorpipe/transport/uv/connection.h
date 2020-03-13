@@ -32,10 +32,8 @@ class Connection : public transport::Connection,
   struct ConstructorToken {};
 
  public:
-  Connection(
-      ConstructorToken,
-      std::shared_ptr<Loop> loop,
-      std::shared_ptr<TCPHandle> handle);
+  Connection(ConstructorToken, std::shared_ptr<Loop> loop,
+             std::shared_ptr<TCPHandle> handle);
 
   ~Connection() override;
 
@@ -51,14 +49,12 @@ class Connection : public transport::Connection,
 
  private:
   // Create a connection that connects to the specified address.
-  static std::shared_ptr<Connection> create_(
-      std::shared_ptr<Loop> loop,
-      const Sockaddr& addr);
+  static std::shared_ptr<Connection> create_(std::shared_ptr<Loop> loop,
+                                             const Sockaddr& addr);
 
   // Create a connection that is already connected (e.g. from a listener).
-  static std::shared_ptr<Connection> create_(
-      std::shared_ptr<Loop> loop,
-      std::shared_ptr<TCPHandle> handle);
+  static std::shared_ptr<Connection> create_(std::shared_ptr<Loop> loop,
+                                             std::shared_ptr<TCPHandle> handle);
 
   // Called to initialize member fields that need `shared_from_this`.
   void init_();
@@ -78,6 +74,6 @@ class Connection : public transport::Connection,
   friend class Listener;
 };
 
-} // namespace uv
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace uv
+}  // namespace transport
+}  // namespace tensorpipe

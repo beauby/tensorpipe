@@ -29,8 +29,8 @@ struct TestData {
 std::shared_ptr<RingBuffer> makeRingBuffer(size_t size) {
   auto header = std::make_shared<RingBufferHeader>(size);
   // In C++20 use std::make_shared<uint8_t[]>(size)
-  auto data = std::shared_ptr<uint8_t>(
-      new uint8_t[header->kDataPoolByteSize], std::default_delete<uint8_t[]>());
+  auto data = std::shared_ptr<uint8_t>(new uint8_t[header->kDataPoolByteSize],
+                                       std::default_delete<uint8_t[]>());
   return std::make_shared<RingBuffer>(std::move(header), std::move(data));
 }
 
@@ -111,7 +111,7 @@ TEST(RingBuffer, ReadMultipleElems) {
 
   EXPECT_EQ(rb->getHeader().usedSizeWeak(), 0);
 
-  uint16_t n = 0xACAC; // fits 128 times
+  uint16_t n = 0xACAC;  // fits 128 times
 
   {
     for (int i = 0; i < 128; ++i) {
@@ -545,7 +545,7 @@ TEST(RingBuffer, readContiguousAtMostInTx) {
 
   EXPECT_EQ(rb->getHeader().usedSizeWeak(), 0);
 
-  uint16_t n = 0xACAC; // fits 128 times
+  uint16_t n = 0xACAC;  // fits 128 times
 
   {
     for (int i = 0; i < 128; ++i) {

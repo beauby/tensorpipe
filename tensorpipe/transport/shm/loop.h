@@ -119,9 +119,7 @@ class Loop final : public std::enable_shared_from_this<Loop> {
   // Instantiates an event monitor for the specified fd.
   template <typename T>
   std::shared_ptr<FunctionEventHandler> monitor(
-      std::shared_ptr<T> shared,
-      int fd,
-      int event,
+      std::shared_ptr<T> shared, int fd, int event,
       std::function<void(T&, FunctionEventHandler&)> fn) {
     // Note: we capture a shared_ptr to the loop in the lambda below
     // in order to keep the loop alive from the function event handler
@@ -129,11 +127,8 @@ class Loop final : public std::enable_shared_from_this<Loop> {
     // loop itself, because that would cause a reference cycle when
     // the loop stores an instance itself.
     auto handler = std::make_shared<FunctionEventHandler>(
-        this,
-        fd,
-        event,
-        [loop{shared_from_this()},
-         weak{std::weak_ptr<T>{shared}},
+        this, fd, event,
+        [loop{shared_from_this()}, weak{std::weak_ptr<T>{shared}},
          fn{std::move(fn)}](FunctionEventHandler& handler) {
           auto shared = weak.lock();
           if (shared) {
@@ -147,9 +142,7 @@ class Loop final : public std::enable_shared_from_this<Loop> {
   // Tell loop to terminate when no more handlers remain.
   void join();
 
-  inline bool inReactorThread() {
-    return reactor_->inReactorThread();
-  }
+  inline bool inReactorThread() { return reactor_->inReactorThread(); }
 
  private:
   static constexpr auto kCapacity_ = 64;
@@ -217,6 +210,6 @@ class Loop final : public std::enable_shared_from_this<Loop> {
   void handleDeferredFunctionFromReactor();
 };
 
-} // namespace shm
-} // namespace transport
-} // namespace tensorpipe
+}  // namespace shm
+}  // namespace transport
+}  // namespace tensorpipe

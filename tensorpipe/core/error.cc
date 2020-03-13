@@ -24,4 +24,4 @@ std::string PipeClosedError::what() const {
   return ss.str();
 }
 
-} // namespace tensorpipe
+}  // namespace tensorpipe
