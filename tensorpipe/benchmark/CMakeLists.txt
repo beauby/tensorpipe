@@ -7,7 +7,13 @@
 # TODO: Make those separate CMake projects.
 
 add_executable(benchmark_transport benchmark_transport.cc options.cc)
-target_link_libraries(benchmark_transport PRIVATE tensorpipe)
+target_link_libraries(benchmark_transport
+  PRIVATE
+  tensorpipe
+  protobuf::libprotobuf-lite)
 
 add_executable(benchmark_pipe benchmark_pipe.cc options.cc)
-target_link_libraries(benchmark_pipe PRIVATE tensorpipe)
+target_link_libraries(benchmark_pipe
+  PRIVATE
+  tensorpipe
+  protobuf::libprotobuf-lite)

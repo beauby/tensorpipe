@@ -21,15 +21,10 @@ target_sources(tensorpipe PRIVATE
   core/error.cc
   core/listener.cc
   core/pipe.cc
+  proto/core.proto
   transport/connection.cc
   transport/error.cc
   )
-
-
-## Protobufs
-
-add_subdirectory(proto)
-target_link_libraries(tensorpipe PUBLIC tensorpipe_proto)
 
 
 ## Channels
@@ -38,14 +33,16 @@ target_link_libraries(tensorpipe PUBLIC tensorpipe_proto)
 
 target_sources(tensorpipe PRIVATE
   channel/basic/channel.cc
-  channel/basic/context.cc)
+  channel/basic/context.cc
+  proto/channel/basic.proto)
 
 ### cma
 
 if(TP_ENABLE_CMA)
   target_sources(tensorpipe PRIVATE
     channel/cma/channel.cc
-    channel/cma/context.cc)
+    channel/cma/context.cc
+    proto/channel/cma.proto)
   target_compile_definitions(tensorpipe INTERFACE TP_ENABLE_CMA)
 endif()
 
@@ -83,6 +80,23 @@ if(TP_ENABLE_SHM)
     )
   target_compile_definitions(tensorpipe INTERFACE TP_ENABLE_SHM)
 endif()
+
+
+## Protobufs
+
+if(NOT TARGET libprotobuf)
+  find_package(Protobuf 3 REQUIRED)
+endif()
+target_link_libraries(tensorpipe PRIVATE protobuf::libprotobuf)
+
+# Support `#include <tensorpipe/proto/foo.pb.h>`.
+target_include_directories(tensorpipe PRIVATE ${CMAKE_BINARY_DIR})
+
+# Support `#include "proto/foo.pb.h"`, as generate by protoc.
+target_include_directories(tensorpipe PRIVATE ${CMAKE_BINARY_DIR}/tensorpipe)
+
+include(protobuf-generate)
+protobuf_generate(TARGET tensorpipe)
 
 
 # Python bindings

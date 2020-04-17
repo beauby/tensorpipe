@@ -41,6 +41,9 @@ if(TP_ENABLE_CMA)
     )
 endif()
 
+# Support `#include <tensorpipe/proto/foo.pb.h>`
+target_include_directories(tensorpipe_test PRIVATE ${CMAKE_BINARY_DIR})
+
 add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/googletest
   ${CMAKE_BINARY_DIR}/third_party/googletest
   EXCLUDE_FROM_ALL
