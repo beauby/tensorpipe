@@ -7,9 +7,9 @@
 add_library(tensorpipe)
 
 # Support `#include <tensorpipe/foo.h>`.
-target_include_directories(tensorpipe PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
-  )
+target_include_directories(tensorpipe
+                           PUBLIC
+                           $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
 
 target_sources(tensorpipe PRIVATE
   channel/context.cc
@@ -90,10 +90,10 @@ endif()
 target_link_libraries(tensorpipe PRIVATE protobuf::libprotobuf)
 
 # Support `#include <tensorpipe/proto/foo.pb.h>`.
-target_include_directories(tensorpipe PRIVATE ${CMAKE_BINARY_DIR})
+target_include_directories(tensorpipe PRIVATE ${PROJECT_BINARY_DIR})
 
 # Support `#include "proto/foo.pb.h"`, as generate by protoc.
-target_include_directories(tensorpipe PRIVATE ${CMAKE_BINARY_DIR}/tensorpipe)
+target_include_directories(tensorpipe PRIVATE ${PROJECT_BINARY_DIR}/tensorpipe)
 
 include(protobuf-generate)
 protobuf_generate(TARGET tensorpipe)

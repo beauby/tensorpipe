@@ -69,10 +69,10 @@ endif()
 
 if(NOT uv_FOUND)
   set(uv_VERSION "1.33.1")
-  set(uv_LIBRARY_DIRS "${CMAKE_BINARY_DIR}/third_party/libuv")
+  set(uv_LIBRARY_DIRS "${PROJECT_BINARY_DIR}/third_party/libuv")
 
-  add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/libuv
-                   ${CMAKE_BINARY_DIR}/third_party/libuv
+  add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/libuv
+                   ${PROJECT_BINARY_DIR}/third_party/libuv
                    EXCLUDE_FROM_ALL)
 
   add_library(uv::uv_a ALIAS uv_a)
