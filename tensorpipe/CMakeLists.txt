@@ -62,7 +62,12 @@ target_sources(tensorpipe PRIVATE
   transport/uv/sockaddr.cc
   transport/uv/uv.cc
   )
-target_link_libraries(tensorpipe PRIVATE uv::uv_a)
+
+if(BUILD_SHARED_LIBS)
+  target_link_libraries(tensorpipe PRIVATE uv::uv)
+else()
+  target_link_libraries(tensorpipe PRIVATE uv::uv_a)
+endif()
 
 ### shm
 

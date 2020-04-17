@@ -39,7 +39,34 @@ find_package(PkgConfig QUIET)
 
 if((NOT TP_BUILD_LIBUV) AND PkgConfig_FOUND)
   pkg_check_modules(uv QUIET libuv)
+
   if (uv_FOUND)
+    add_library(uv::uv INTERFACE IMPORTED)
+
+    if(uv_INCLUDE_DIRS)
+      set_property(TARGET uv::uv PROPERTY
+                   INTERFACE_INCLUDE_DIRECTORIES "${uv_INCLUDE_DIRS}")
+    endif()
+    if(uv_LIBRARIES)
+      list(REMOVE_ITEM uv_LIBRARIES uv)
+      find_library(uv_LIBRARY_SHARED
+                   NAMES libuv.so libuv.dylib
+                   PATHS "${uv_LIBRARY_DIRS}"
+                   NO_DEFAULT_PATH)
+      list(INSERT uv_LIBRARIES 0 "${uv_LIBRARY_SHARED}")
+      set_property(TARGET uv::uv PROPERTY
+                   INTERFACE_LINK_LIBRARIES "${uv_LIBRARIES}")
+    endif()
+    if(uv_LDFLAGS_OTHER)
+      set_property(TARGET uv::uv PROPERTY
+                   INTERFACE_LINK_OPTIONS "-L${uv_LIBRARY_DIRS} ${uv_LDFLAGS_OTHER}")
+    endif()
+    if(uv_CFLAGS_OTHER)
+      set_property(TARGET uv::uv PROPERTY
+                   INTERFACE_COMPILE_OPTIONS "${uv_CFLAGS_OTHER}")
+    endif()
+
+
     add_library(uv::uv_a INTERFACE IMPORTED)
 
     if(uv_STATIC_INCLUDE_DIRS)
@@ -75,6 +102,7 @@ if(NOT uv_FOUND)
                    ${PROJECT_BINARY_DIR}/third_party/libuv
                    EXCLUDE_FROM_ALL)
 
+  add_library(uv::uv ALIAS uv)
   add_library(uv::uv_a ALIAS uv_a)
 endif()
 
