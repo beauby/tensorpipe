@@ -99,20 +99,63 @@ include(protobuf-generate)
 protobuf_generate(TARGET tensorpipe)
 
 
-# Python bindings
+## Python bindings
 
 if(TP_BUILD_PYTHON)
   add_subdirectory(python)
 endif()
 
 
-# Benchmarks
+## Benchmarks
 
 add_subdirectory(benchmark)
 
 
-# Tests
+## Tests
 
 if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
+
+
+## Installing
+
+set(TENSORPIPE_PUBLIC_HEADERS
+  transport/connection.h
+  transport/error.h
+  transport/defs.h
+  transport/listener.h
+  core/error.h
+  core/listener.h
+  core/context.h
+  core/message.h
+  core/pipe.h
+  channel/error.h
+  channel/channel.h
+  channel/context.h
+  channel/helpers.h
+  common/error_macros.h
+  common/error.h
+  common/defs.h
+  common/address.h
+  common/optional.h
+  common/system.h
+  common/callback.h
+  common/queue.h
+  tensorpipe.h)
+
+include(GNUInstallDirs)
+foreach (file ${TENSORPIPE_PUBLIC_HEADERS})
+  get_filename_component(dir ${file} DIRECTORY)
+  install(FILES ${file} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${dir})
+endforeach()
+install(TARGETS tensorpipe
+  EXPORT tensorpipe-targets
+  LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+install(EXPORT tensorpipe-targets
+  FILE        TensorpipeTargets.cmake
+  NAMESPACE   tensorpipe::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tensorpipe
+  )
