@@ -11,6 +11,33 @@ target_include_directories(tensorpipe
                            PUBLIC
                            $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
 
+set(TENSORPIPE_PUBLIC_HEADERS
+  transport/connection.h
+  transport/context.h
+  transport/error.h
+  transport/defs.h
+  transport/listener.h
+  transport/uv/context.h
+  core/error.h
+  core/listener.h
+  core/context.h
+  core/message.h
+  core/pipe.h
+  channel/error.h
+  channel/channel.h
+  channel/context.h
+  channel/helpers.h
+  channel/basic/context.h
+  common/error_macros.h
+  common/error.h
+  common/defs.h
+  common/address.h
+  common/optional.h
+  common/system.h
+  common/callback.h
+  common/queue.h
+  tensorpipe.h)
+
 target_sources(tensorpipe PRIVATE
   channel/context.cc
   channel/error.cc
@@ -43,6 +70,7 @@ if(TP_ENABLE_CMA)
     channel/cma/channel.cc
     channel/cma/context.cc
     proto/channel/cma.proto)
+  list(APPEND TENSORPIPE_PUBLIC_HEADERS channel/cma/context.h)
   target_compile_definitions(tensorpipe INTERFACE TP_ENABLE_CMA)
 endif()
 
@@ -78,6 +106,7 @@ if(TP_ENABLE_SHM)
     util/ringbuffer/shm.cc
     util/shm/segment.cc
     )
+  list(APPEND TENSORPIPE_PUBLIC_HEADERS transport/shm/context.h)
   target_compile_definitions(tensorpipe INTERFACE TP_ENABLE_SHM)
 endif()
 
@@ -116,30 +145,6 @@ endif()
 
 
 ## Installing
-
-set(TENSORPIPE_PUBLIC_HEADERS
-  transport/connection.h
-  transport/error.h
-  transport/defs.h
-  transport/listener.h
-  core/error.h
-  core/listener.h
-  core/context.h
-  core/message.h
-  core/pipe.h
-  channel/error.h
-  channel/channel.h
-  channel/context.h
-  channel/helpers.h
-  common/error_macros.h
-  common/error.h
-  common/defs.h
-  common/address.h
-  common/optional.h
-  common/system.h
-  common/callback.h
-  common/queue.h
-  tensorpipe.h)
 
 include(GNUInstallDirs)
 foreach (file ${TENSORPIPE_PUBLIC_HEADERS})
