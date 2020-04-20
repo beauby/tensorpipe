@@ -48,7 +48,11 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/googletest
                  ${PROJECT_BINARY_DIR}/third_party/googletest
                  EXCLUDE_FROM_ALL)
 
-target_link_libraries(tensorpipe_test PRIVATE tensorpipe uv::uv_a gtest_main)
+target_link_libraries(tensorpipe_test PRIVATE
+  tensorpipe
+  protobuf::libprotobuf-lite
+  uv::uv
+  gtest_main)
 
 # Defines `gtest_discover_tests()`.
 include(GoogleTest)

@@ -51,8 +51,6 @@ endif()
 
 ### uv
 
-find_package(uv REQUIRED)
-
 target_sources(tensorpipe PRIVATE
   transport/uv/connection.cc
   transport/uv/context.cc
@@ -63,11 +61,8 @@ target_sources(tensorpipe PRIVATE
   transport/uv/uv.cc
   )
 
-if(BUILD_SHARED_LIBS)
-  target_link_libraries(tensorpipe PRIVATE uv::uv)
-else()
-  target_link_libraries(tensorpipe PRIVATE uv::uv_a)
-endif()
+find_package(uv REQUIRED)
+target_link_libraries(tensorpipe PRIVATE uv::uv)
 
 ### shm
 
@@ -89,9 +84,7 @@ endif()
 
 ## Protobufs
 
-if(NOT TARGET libprotobuf)
-  find_package(Protobuf 3 REQUIRED)
-endif()
+find_package(Protobuf 3 REQUIRED)
 target_link_libraries(tensorpipe PRIVATE protobuf::libprotobuf)
 
 # Support `#include <tensorpipe/proto/foo.pb.h>`.
@@ -100,7 +93,6 @@ target_include_directories(tensorpipe PRIVATE ${PROJECT_BINARY_DIR})
 # Support `#include "proto/foo.pb.h"`, as generate by protoc.
 target_include_directories(tensorpipe PRIVATE ${PROJECT_BINARY_DIR}/tensorpipe)
 
-include(protobuf-generate)
 protobuf_generate(TARGET tensorpipe)
 
 

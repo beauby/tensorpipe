@@ -26,84 +26,32 @@
 #   The version of libuv found.
 #
 
-# If libuv was already added with add_subdirectory() from a parent project,
-# simply alias the existing target.
-if(TARGET uv_a)
-  if(NOT (TARGET uv::uv_a))
-    add_library(uv::uv_a ALIAS uv_a)
-  endif()
-  return()
-endif()
-
 find_package(PkgConfig QUIET)
 
 if((NOT TP_BUILD_LIBUV) AND PkgConfig_FOUND)
-  pkg_check_modules(uv QUIET libuv)
-
-  if (uv_FOUND)
-    add_library(uv::uv INTERFACE IMPORTED)
-
-    if(uv_INCLUDE_DIRS)
-      set_property(TARGET uv::uv PROPERTY
-                   INTERFACE_INCLUDE_DIRECTORIES "${uv_INCLUDE_DIRS}")
-    endif()
-    if(uv_LIBRARIES)
-      list(REMOVE_ITEM uv_LIBRARIES uv)
-      find_library(uv_LIBRARY_SHARED
-                   NAMES libuv.so libuv.dylib
-                   PATHS "${uv_LIBRARY_DIRS}"
-                   NO_DEFAULT_PATH)
-      list(INSERT uv_LIBRARIES 0 "${uv_LIBRARY_SHARED}")
-      set_property(TARGET uv::uv PROPERTY
-                   INTERFACE_LINK_LIBRARIES "${uv_LIBRARIES}")
-    endif()
-    if(uv_LDFLAGS_OTHER)
-      set_property(TARGET uv::uv PROPERTY
-                   INTERFACE_LINK_OPTIONS "-L${uv_LIBRARY_DIRS} ${uv_LDFLAGS_OTHER}")
-    endif()
-    if(uv_CFLAGS_OTHER)
-      set_property(TARGET uv::uv PROPERTY
-                   INTERFACE_COMPILE_OPTIONS "${uv_CFLAGS_OTHER}")
-    endif()
-
-
-    add_library(uv::uv_a INTERFACE IMPORTED)
-
-    if(uv_STATIC_INCLUDE_DIRS)
-      set_property(TARGET uv::uv_a PROPERTY
-                   INTERFACE_INCLUDE_DIRECTORIES "${uv_STATIC_INCLUDE_DIRS}")
-    endif()
-    if(uv_STATIC_LIBRARIES)
-      list(REMOVE_ITEM uv_STATIC_LIBRARIES uv)
-      find_library(uv_LIBRARY_ARCHIVE
-                   NAMES libuv.a libuv_a.a
-                   PATHS "${uv_STATIC_LIBRARY_DIRS}"
-                   NO_DEFAULT_PATH)
-      list(INSERT uv_STATIC_LIBRARIES 0 "${uv_LIBRARY_ARCHIVE}")
-      set_property(TARGET uv::uv_a PROPERTY
-                   INTERFACE_LINK_LIBRARIES "${uv_STATIC_LIBRARIES}")
-    endif()
-    if(uv_STATIC_LDFLAGS_OTHER)
-      set_property(TARGET uv::uv_a PROPERTY
-                   INTERFACE_LINK_OPTIONS "${uv_STATIC_LDFLAGS_OTHER}")
-    endif()
-    if(uv_STATIC_CFLAGS_OTHER)
-      set_property(TARGET uv::uv_a PROPERTY
-                   INTERFACE_COMPILE_OPTIONS "${uv_STATIC_CFLAGS_OTHER}")
-    endif()
-  endif()
+  pkg_check_modules(uv QUIET IMPORTED_TARGET GLOBAL libuv)
+  add_library(uv::uv ALIAS PkgConfig::uv)
 endif()
 
 if(NOT uv_FOUND)
-  set(uv_VERSION "1.33.1")
-  set(uv_LIBRARY_DIRS "${PROJECT_BINARY_DIR}/third_party/libuv")
+  include(FetchContent)
+  FetchContent_Declare(libuv
+    URL "https://github.com/libuv/libuv/archive/v1.37.0.tar.gz"
+    )
+  FetchContent_MakeAvailable(libuv)
+  set(uv_VERSION "1.37.0")
+  set(uv_LIBRARY_DIRS "downloaded")
 
-  add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/libuv
-                   ${PROJECT_BINARY_DIR}/third_party/libuv
-                   EXCLUDE_FROM_ALL)
-
-  add_library(uv::uv ALIAS uv)
-  add_library(uv::uv_a ALIAS uv_a)
+  if(BUILD_SHARED_LIBS)
+    set(libuv_TARGET uv)
+  else()
+    set(libuv_TARGET uv_a)
+  endif()
+  install(TARGETS ${libuv_TARGET}
+    EXPORT tensorpipe-targets
+    LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  add_library(uv::uv ALIAS ${libuv_TARGET})
 endif()
 
 include(FindPackageHandleStandardArgs)
