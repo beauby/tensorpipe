@@ -144,15 +144,15 @@ set(TENSORPIPE_PUBLIC_HEADERS
 include(GNUInstallDirs)
 foreach (file ${TENSORPIPE_PUBLIC_HEADERS})
   get_filename_component(dir ${file} DIRECTORY)
-  install(FILES ${file} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${dir})
+  install(FILES ${file} DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/tensorpipe/${dir})
 endforeach()
 install(TARGETS tensorpipe
   EXPORT tensorpipe-targets
-  LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY       DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE       DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}
   )
 install(EXPORT tensorpipe-targets
   FILE        TensorpipeTargets.cmake
   NAMESPACE   tensorpipe::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tensorpipe
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/cmake/tensorpipe
   )
