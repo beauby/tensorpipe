@@ -113,7 +113,8 @@ endif()
 
 ## Protobufs
 
-find_package(Protobuf 3 REQUIRED)
+find_package(Protobuf 3 REQUIRED
+  HINTS ${TP_PROTOBUF_HINTS})
 target_link_libraries(tensorpipe PRIVATE protobuf::libprotobuf)
 
 # Support `#include <tensorpipe/proto/foo.pb.h>`.
