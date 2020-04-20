@@ -133,11 +133,6 @@ if(TP_BUILD_PYTHON)
 endif()
 
 
-## Benchmarks
-
-add_subdirectory(benchmark)
-
-
 ## Tests
 
 if(BUILD_TESTING)
