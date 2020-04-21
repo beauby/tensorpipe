@@ -151,7 +151,7 @@ foreach (file ${TENSORPIPE_PUBLIC_HEADERS})
   get_filename_component(dir ${file} DIRECTORY)
   install(FILES ${file} DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/tensorpipe/${dir})
 endforeach()
-install(FILES ${PROJECT_SOURCE_DIR}/cmake/TensorpipeConfig.cmake
+install(FILES ${PROJECT_SOURCE_DIR}/cmake/tensorpipe-config.cmake
   DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME})
 install(TARGETS tensorpipe
   EXPORT tensorpipe-targets
@@ -159,7 +159,7 @@ install(TARGETS tensorpipe
   ARCHIVE       DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}
   )
 install(EXPORT tensorpipe-targets
-  FILE        TensorpipeTargets.cmake
+  FILE        tensorpipe-targets.cmake
   NAMESPACE   tensorpipe::
   DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME}
   )
