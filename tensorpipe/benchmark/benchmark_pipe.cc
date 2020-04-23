@@ -8,8 +8,6 @@
 
 #include <future>
 
-#include <tensorpipe/benchmark/measurements.h>
-#include <tensorpipe/benchmark/options.h>
 #include <tensorpipe/channel/basic/context.h>
 #ifdef TP_ENABLE_CMA
 #include <tensorpipe/channel/cma/context.h>
@@ -22,6 +20,9 @@
 #include <tensorpipe/transport/shm/context.h>
 #endif // TP_ENABLE_SHM
 #include <tensorpipe/transport/uv/context.h>
+
+#include "measurements.h"
+#include "options.h"
 
 using namespace tensorpipe;
 using namespace tensorpipe::benchmark;

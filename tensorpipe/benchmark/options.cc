@@ -6,12 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#include "tensorpipe/benchmark/options.h"
-
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "options.h"
 
 namespace tensorpipe {
 namespace benchmark {
