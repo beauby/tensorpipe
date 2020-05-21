@@ -12,6 +12,51 @@
 
 #include <tensorpipe/common/queue.h>
 
+[[nodiscard]] std::pair<
+    std::future<std::tuple<
+        tensorpipe::Error,
+        tensorpipe::channel::Channel::TDescriptor>>,
+    std::future<tensorpipe::Error>>
+sendWithFuture(
+    std::shared_ptr<tensorpipe::channel::Channel> channel,
+    const void* ptr,
+    size_t length) {
+  auto descriptorPromise = std::make_shared<
+      std::promise<std::tuple<tensorpipe::Error, std::string>>>();
+  auto promise = std::make_shared<std::promise<tensorpipe::Error>>();
+  auto descriptorFuture = descriptorPromise->get_future();
+  auto future = promise->get_future();
+  channel->send(
+      ptr,
+      length,
+      [descriptorPromise{std::move(descriptorPromise)}](
+          const tensorpipe::Error& error, std::string descriptor) {
+        descriptorPromise->set_value(
+            std::make_tuple(error, std::move(descriptor)));
+      },
+      [promise{std::move(promise)}](const tensorpipe::Error& error) {
+        promise->set_value(error);
+      });
+  return {std::move(descriptorFuture), std::move(future)};
+}
+
+[[nodiscard]] std::future<tensorpipe::Error> recvWithFuture(
+    std::shared_ptr<tensorpipe::channel::Channel> channel,
+    tensorpipe::channel::Channel::TDescriptor descriptor,
+    void* ptr,
+    size_t length) {
+  auto promise = std::make_shared<std::promise<tensorpipe::Error>>();
+  auto future = promise->get_future();
+  channel->recv(
+      std::move(descriptor),
+      ptr,
+      length,
+      [promise{std::move(promise)}](const tensorpipe::Error& error) {
+        promise->set_value(error);
+      });
+  return future;
+}
+
 using namespace tensorpipe;
 using namespace tensorpipe::channel;
 

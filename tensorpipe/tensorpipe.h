@@ -38,3 +38,7 @@
 #ifdef TP_ENABLE_CMA
 #include <tensorpipe/channel/cma/context.h>
 #endif // TP_ENABLE_CMA
+
+#ifdef TP_ENABLE_CUDA
+#include <tensorpipe/channel/cuda/context.h>
+#endif // TP_ENABLE_CUDA

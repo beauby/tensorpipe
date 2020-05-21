@@ -42,6 +42,15 @@ if(TP_ENABLE_CMA)
     )
 endif()
 
+if(TP_ENABLE_CUDA)
+  find_package(CUDAToolkit REQUIRED)
+  target_link_libraries(tensorpipe_test PRIVATE CUDA::cudart)
+
+  target_sources(tensorpipe_test PRIVATE
+    channel/cuda/cuda_test.cc
+    )
+endif()
+
 
 include(FetchContent)
 FetchContent_Declare(googletest

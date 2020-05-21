@@ -76,6 +76,17 @@ if(TP_ENABLE_CMA)
   target_compile_definitions(tensorpipe INTERFACE TP_ENABLE_CMA)
 endif()
 
+if(TP_ENABLE_CUDA)
+  list(APPEND TENSORPIPE_PUBLIC_HEADERS channel/cuda/context.h)
+  target_sources(tensorpipe PRIVATE
+    channel/cuda/channel.cc
+    channel/cuda/context.cc
+    proto/channel/cuda.proto)
+  target_compile_definitions(tensorpipe INTERFACE TP_ENABLE_CUDA)
+
+  find_package(CUDAToolkit REQUIRED)
+  target_link_libraries(tensorpipe PRIVATE CUDA::cudart)
+endif()
 
 ## Transports
 
