@@ -76,6 +76,8 @@ if(TP_ENABLE_CMA)
   target_compile_definitions(tensorpipe INTERFACE TP_ENABLE_CMA)
 endif()
 
+### cuda
+
 if(TP_ENABLE_CUDA)
   list(APPEND TENSORPIPE_PUBLIC_HEADERS channel/cuda/context.h)
   target_sources(tensorpipe PRIVATE

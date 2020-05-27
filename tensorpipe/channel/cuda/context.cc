@@ -16,8 +16,6 @@
 #include <limits>
 #include <list>
 
-#include <cuda_runtime.h>
-
 #include <tensorpipe/channel/cuda/channel.h>
 #include <tensorpipe/channel/error.h>
 #include <tensorpipe/channel/helpers.h>
@@ -69,12 +67,6 @@ class Context::Impl : public Context::PrivateIface,
 
   using copy_request_callback_fn = std::function<void(const Error&)>;
 
-  void requestCopy(
-      void* remotePtr,
-      void* localPtr,
-      size_t length,
-      copy_request_callback_fn fn) override;
-
   void close();
 
   void join();
@@ -82,16 +74,7 @@ class Context::Impl : public Context::PrivateIface,
   ~Impl() override = default;
 
  private:
-  struct CopyRequest {
-    void* remotePtr;
-    void* localPtr;
-    size_t length;
-    copy_request_callback_fn callback;
-  };
-
   std::string domainDescriptor_;
-  std::thread thread_;
-  Queue<optional<CopyRequest>> requests_;
   std::atomic<bool> closed_{false};
   std::atomic<bool> joined_{false};
   ClosingEmitter closingEmitter_;
@@ -105,16 +88,11 @@ class Context::Impl : public Context::PrivateIface,
   // their identifiers based off this context's identifier. They will only be
   // used for logging and debugging.
   std::atomic<uint64_t> channelCounter_{0};
-
-  void handleCopyRequests_();
 };
 
 Context::Context() : impl_(std::make_shared<Context::Impl>()) {}
 
-Context::Impl::Impl()
-    : domainDescriptor_(generateDomainDescriptor()), requests_(INT_MAX) {
-  thread_ = std::thread(&Impl::handleCopyRequests_, this);
-}
+Context::Impl::Impl() : domainDescriptor_(generateDomainDescriptor()) {}
 
 void Context::close() {
   impl_->close();
@@ -123,7 +101,6 @@ void Context::close() {
 void Context::Impl::close() {
   if (!closed_.exchange(true)) {
     closingEmitter_.close();
-    requests_.push(nullopt);
   }
 }
 
@@ -134,10 +111,7 @@ void Context::join() {
 void Context::Impl::join() {
   close();
 
-  if (!joined_.exchange(true)) {
-    thread_.join();
-    // TP_DCHECK(requests_.empty());
-  }
+  joined_.exchange(true);
 }
 
 Context::~Context() {
@@ -175,41 +149,13 @@ std::shared_ptr<channel::Channel> Context::Impl::createChannel(
     Channel::Endpoint /* unused */) {
   TP_THROW_ASSERT_IF(joined_);
   std::string channelId = id_ + ".c" + std::to_string(channelCounter_++);
-  TP_VLOG() << "Channel context " << id_ << " is opening channel " << channelId;
+  TP_VLOG(4) << "Channel context " << id_ << " is opening channel "
+             << channelId;
   return std::make_shared<Channel>(
       Channel::ConstructorToken(),
       std::static_pointer_cast<PrivateIface>(shared_from_this()),
       std::move(connection),
       std::move(channelId));
-}
-
-void Context::Impl::requestCopy(
-    void* remotePtr,
-    void* localPtr,
-    size_t length,
-    std::function<void(const Error&)> fn) {
-  requests_.push(CopyRequest{remotePtr, localPtr, length, std::move(fn)});
-}
-
-void Context::Impl::handleCopyRequests_() {
-  setThreadName("TP_CUDA_loop");
-  while (true) {
-    auto maybeRequest = requests_.pop();
-    if (!maybeRequest.has_value()) {
-      break;
-    }
-    CopyRequest request = std::move(maybeRequest).value();
-
-    // Perform copy.
-    cudaError_t error = cudaMemcpy(
-        request.localPtr, request.remotePtr, request.length, cudaMemcpyDefault);
-    if (error != cudaSuccess) {
-      // FIXME: Create CudaError class.
-      request.callback(TP_CREATE_ERROR(SystemError, "cuda", error));
-    } else {
-      request.callback(Error::kSuccess);
-    }
-  }
 }
 
 } // namespace cuda

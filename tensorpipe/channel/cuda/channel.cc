@@ -202,7 +202,6 @@ void Channel::Impl::sendFromLoop_(
   cudaError_t error = cudaIpcGetMemHandle(&handle, const_cast<void*>(ptr));
   TP_DCHECK_EQ(cudaSuccess, error);
 
-  // NOTE: This is a bit shady.
   pbDescriptor.mutable_handle()->append(
       reinterpret_cast<const char*>(&handle), sizeof(handle));
   sendOperations_.emplace_back(SendOperation{id, std::move(callback)});
@@ -254,29 +253,23 @@ void Channel::Impl::recvFromLoop_(
   void* remotePtr;
   cudaError_t error = cudaIpcOpenMemHandle(
       &remotePtr, *remoteHandle, cudaIpcMemLazyEnablePeerAccess);
-  TP_DCHECK_EQ(cudaSuccess, error)
-      << cudaGetErrorName(error) << ": " << cudaGetErrorString(error);
+  TP_DCHECK_EQ(cudaSuccess, error);
 
-  context_->requestCopy(
-      remotePtr,
-      ptr,
-      length,
-      eagerCallbackWrapper_([id, remotePtr, callback{std::move(callback)}](
-                                Impl& impl) {
-        // Let peer know we've completed the copy.
-        auto pbPacketOut = std::make_shared<proto::Packet>();
-        proto::Notification* pbNotification =
-            pbPacketOut->mutable_notification();
-        pbNotification->set_operation_id(id);
-        impl.connection_->write(
-            *pbPacketOut,
-            impl.lazyCallbackWrapper_([pbPacketOut](Impl& /* unused */) {}));
+  // Perform copy.
+  error = cudaMemcpy(ptr, remotePtr, length, cudaMemcpyDefault);
+  TP_DCHECK_EQ(cudaSuccess, error);
 
-        cudaError_t error = cudaIpcCloseMemHandle(remotePtr);
-        TP_DCHECK_EQ(cudaSuccess, error);
+  error = cudaIpcCloseMemHandle(remotePtr);
+  TP_DCHECK_EQ(cudaSuccess, error);
 
-        callback(impl.error_);
-      }));
+  // Let peer know we've completed the copy.
+  auto pbPacketOut = std::make_shared<proto::Packet>();
+  proto::Notification* pbNotification = pbPacketOut->mutable_notification();
+  pbNotification->set_operation_id(id);
+  connection_->write(
+      *pbPacketOut, lazyCallbackWrapper_([pbPacketOut](Impl& /* unused */) {}));
+
+  callback(error_);
 }
 
 void Channel::setId(std::string id) {
@@ -284,7 +277,7 @@ void Channel::setId(std::string id) {
 }
 
 void Channel::Impl::setId(std::string id) {
-  TP_VLOG() << "Channel " << id_ << " was renamed to " << id;
+  TP_VLOG(4) << "Channel " << id_ << " was renamed to " << id;
   // FIXME Should we defer this to the loop?
   id_ = std::move(id);
 }

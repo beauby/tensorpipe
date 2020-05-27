@@ -34,6 +34,14 @@ sendWithFuture(
     void* ptr,
     size_t length);
 
+class ChannelTestHelper {
+ public:
+  virtual std::shared_ptr<tensorpipe::channel::Context> makeContext(
+      std::string id) = 0;
+
+  virtual ~ChannelTestHelper() = default;
+};
+
 class ChannelTest : public ::testing::TestWithParam<ChannelTestHelper*> {
  public:
   void testConnectionPair(
@@ -172,12 +180,4 @@ class ProcessChannelTest : public ::testing::TestWithParam<ChannelTestHelper*> {
 
     return str;
   }
-};
-
-class ChannelTestHelper {
- public:
-  virtual std::shared_ptr<tensorpipe::channel::Context> makeContext(
-      std::string id) = 0;
-
-  virtual ~ChannelTestHelper() = default;
 };
