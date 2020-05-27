@@ -163,6 +163,10 @@ if(BUILD_TESTING)
 endif()
 
 
+## Logging
+target_compile_definitions(tensorpipe INTERFACE TP_VERBOSE_LOGGING)
+
+
 ## Installing
 
 include(GNUInstallDirs)
