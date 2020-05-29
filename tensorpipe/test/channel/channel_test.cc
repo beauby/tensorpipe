@@ -372,3 +372,23 @@ TEST_P(ChannelTest, CallbacksAreDeferred) {
   serverCtx->join();
   clientCtx->join();
 }
+
+// Each channel test has a general setup and two peers. Those two peers are
+// either processes or threads (for now). The general setup is shared by all
+// peers (possibly copied when it makes sense). Each peer is a method on the
+// test class with a few helpers for message passing (pipes for all for now),
+// and joining (sending the other peer it is done and waiting for the other peer
+// to be done).
+
+CHANNEL_TEST(ProcessTest, FooBar) {
+  // common setup
+}
+
+CHANNEL_TEST_SERVER(FooBar) {
+  sendClient("descriptor");
+  join();
+}
+
+CHANNEL_TEST_CLIENT(FooBar) {
+  join();
+}

@@ -42,7 +42,43 @@ class ChannelTestHelper {
   virtual ~ChannelTestHelper() = default;
 };
 
-class ChannelTest : public ::testing::TestWithParam<ChannelTestHelper*> {
+class ProcessPair {
+ public:
+  ProcessPair() {
+    for (int i = 0; i < 2; ++i) {
+      pipe(pipefds[i]);
+    }
+  }
+
+  ~ProcessPair() {
+    for (int i = 0; i < 2; ++i) {
+      for (int j = 0; j < 2; ++j) {
+        close(pipefds[i][j]);
+      }
+    }
+  }
+
+  void spawn() {}
+
+ private:
+  int pipefds[2][2];
+};
+
+class ChannelProcessTestHelper {
+ public:
+  ChannelProcessTestHelper() {}
+
+  void testConnectionPair(
+      std::function<void>(
+          std::shared_ptr<tensorpipe::transport::Connection> f1),
+      std::function<void>(
+          std::shared_ptr<tensorpipe::transport::Connection> f2)) {}
+
+  void sendPeer(int pipefd[2], std::string) {}
+  std::string recvPeer(int pipefd[2]) {}
+}
+
+class ThreadChannelTest : public ::testing::TestWithParam<ChannelTestHelper*> {
  public:
   void testConnectionPair(
       std::function<void(std::shared_ptr<tensorpipe::transport::Connection>)>
@@ -133,6 +169,11 @@ class ProcessChannelTest : public ::testing::TestWithParam<ChannelTestHelper*> {
           [this]() { return this->recvStr(this->pipefd2); });
 
       context->join();
+
+      do {
+        auto str = recvStr();
+      } while (str != "done");
+
       return;
     }
 
@@ -152,6 +193,11 @@ class ProcessChannelTest : public ::testing::TestWithParam<ChannelTestHelper*> {
           [this]() { return this->recvStr(this->pipefd1); });
 
       context->join();
+
+      do {
+        auto str = recvStr();
+      } while (str != "done");
+
       return;
     }
 
@@ -181,3 +227,5 @@ class ProcessChannelTest : public ::testing::TestWithParam<ChannelTestHelper*> {
     return str;
   }
 };
+
+class ChannelTest : public ProcessChannelTest {};
