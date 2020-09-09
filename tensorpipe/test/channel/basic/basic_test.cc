@@ -11,14 +11,10 @@
 
 namespace {
 
-class BasicChannelTestHelper : public ChannelTestHelper {
+class BasicChannelTestHelper : public ChannelTestHelper<tensorpipe::CpuTensor> {
  public:
-  std::string channelName() override {
-    return "basic";
-  }
-
-  std::shared_ptr<tensorpipe::channel::Context> makeContext(
-      std::string id) override {
+  std::shared_ptr<tensorpipe::channel::Context<tensorpipe::CpuTensor>>
+  makeContext(std::string id) override {
     auto context = std::make_shared<tensorpipe::channel::basic::Context>();
     context->setId(std::move(id));
     return context;
@@ -29,4 +25,4 @@ BasicChannelTestHelper helper;
 
 } // namespace
 
-INSTANTIATE_TEST_CASE_P(Basic, ChannelTest, ::testing::Values(&helper));
+INSTANTIATE_TEST_CASE_P(Basic, CpuChannelTest, ::testing::Values(&helper));

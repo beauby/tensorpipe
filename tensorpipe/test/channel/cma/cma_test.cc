@@ -11,14 +11,10 @@
 
 namespace {
 
-class CmaChannelTestHelper : public ChannelTestHelper {
+class CmaChannelTestHelper : public ChannelTestHelper<tensorpipe::CpuTensor> {
  public:
-  std::string channelName() override {
-    return "cma";
-  }
-
-  std::shared_ptr<tensorpipe::channel::Context> makeContext(
-      std::string id) override {
+  std::shared_ptr<tensorpipe::channel::Context<tensorpipe::CpuTensor>>
+  makeContext(std::string id) override {
     auto context = std::make_shared<tensorpipe::channel::cma::Context>();
     context->setId(std::move(id));
     return context;
@@ -29,4 +25,4 @@ CmaChannelTestHelper helper;
 
 } // namespace
 
-INSTANTIATE_TEST_CASE_P(Cma, ChannelTest, ::testing::Values(&helper));
+INSTANTIATE_TEST_CASE_P(Cma, CpuChannelTest, ::testing::Values(&helper));

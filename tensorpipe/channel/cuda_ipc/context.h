@@ -20,15 +20,15 @@ namespace tensorpipe {
 namespace channel {
 namespace cuda_ipc {
 
-class Context : public channel::Context {
+class Context : public channel::CudaContext {
  public:
   Context();
 
   const std::string& domainDescriptor() const override;
 
-  std::shared_ptr<Channel> createChannel(
+  std::shared_ptr<CudaChannel> createChannel(
       std::shared_ptr<transport::Connection>,
-      Channel::Endpoint) override;
+      Endpoint) override;
 
   void setId(std::string id) override;
 
