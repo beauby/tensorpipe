@@ -157,6 +157,10 @@ std::shared_ptr<channel::Context> ContextImpl::getChannel(
   return iter->second;
 }
 
+const std::vector<Device>& ContextImpl::getDevices() {
+  return devices_;
+}
+
 const ContextImpl::TOrderedTransports& ContextImpl::getOrderedTransports() {
   return transportsByPriority_;
 }

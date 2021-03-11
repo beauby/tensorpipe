@@ -25,6 +25,31 @@ enum class DeviceType {
 #endif // TENSORPIPE_SUPPORTS_CUDA
 };
 
+inline std::string deviceTypeName(DeviceType type) {
+  switch (type) {
+  case DeviceType::kCpu:
+    return "cpu";
+    break;
+#if TENSORPIPE_SUPPORTS_CUDA
+  case DeviceType::kCuda:
+    return "cuda";
+    break;
+#endif // TENSORPIPE_SUPPORTS_CUDA
+  default:
+    TP_THROW_ASSERT() << "Unrecognized device type";
+    return "";
+  }
+}
+
+struct Device {
+  DeviceType type;
+  int id;
+
+  std::string name() const {
+    return deviceTypeName(type) + std::to_string(id);
+  }
+};
+
 struct Buffer {
   Buffer() {}
 

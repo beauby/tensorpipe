@@ -53,6 +53,8 @@ class ContextImpl final : public virtual DeferredExecutor,
       const std::string& transport);
   std::shared_ptr<channel::Context> getChannel(const std::string& channel);
 
+  const std::vector<Device>& getDevices();
+
   using TOrderedTransports = std::map<
       int64_t,
       std::tuple<std::string, std::shared_ptr<transport::Context>>>;
@@ -126,6 +128,9 @@ class ContextImpl final : public virtual DeferredExecutor,
 
   std::unordered_map<std::string, std::shared_ptr<transport::Context>>
       transports_;
+
+  // List of devices this context knows about.
+  std::vector<Device> devices_;
 
   using TContextMap =
       std::unordered_map<std::string, std::shared_ptr<channel::Context>>;

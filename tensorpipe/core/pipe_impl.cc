@@ -257,14 +257,18 @@ void PipeImpl::initFromLoop() {
       nopTransportAdvertisement.domainDescriptor =
           transportContext.domainDescriptor();
     }
-    for (const auto& channelContextIter : context_->getOrderedChannels()) {
-      const std::string& channelName = std::get<0>(channelContextIter.second);
-      const channel::Context& channelContext =
-          *(std::get<1>(channelContextIter.second));
-      ChannelAdvertisement& nopChannelAdvertisement =
-          nopBrochure.channelAdvertisement[channelName];
-      nopChannelAdvertisement.domainDescriptor =
-          channelContext.domainDescriptor();
+    for (const auto& device : context_->getDevices()) {
+      auto& deviceChannelAdvertisement =
+          nopBrochure.channelAdvertisement[device.name()];
+      for (const auto& channelContextIter : context_->getOrderedChannels()) {
+        const std::string& channelName = std::get<0>(channelContextIter.second);
+        const channel::Context& channelContext =
+            *(std::get<1>(channelContextIter.second));
+        ChannelAdvertisement& nopChannelAdvertisement =
+            deviceChannelAdvertisement[channelName];
+        nopChannelAdvertisement.domainDescriptor =
+            channelContext.domainDescriptor();
+      }
     }
     TP_VLOG(3) << "Pipe " << id_ << " is writing nop object (brochure)";
     connection_->write(
@@ -909,57 +913,62 @@ void PipeImpl::onReadWhileServerWaitingForBrochure(const Packet& nopPacketIn) {
   }
   TP_THROW_ASSERT_IF(!foundATransport);
 
-  for (const auto& channelContextIter : context_->getOrderedChannels()) {
-    const std::string& channelName = std::get<0>(channelContextIter.second);
-    const channel::Context& channelContext =
-        *(std::get<1>(channelContextIter.second));
+  for (const auto& device : context_->getDevices()) {
+    // TODO: Select channels for pairs.
+    for (const auto& channelContextIter : context_->getOrderedChannels()) {
+      const std::string& channelName = std::get<0>(channelContextIter.second);
+      const channel::Context& channelContext =
+          *(std::get<1>(channelContextIter.second));
 
-    const auto nopChannelAdvertisementIter =
-        nopBrochure.channelAdvertisement.find(channelName);
-    if (nopChannelAdvertisementIter ==
-        nopBrochure.channelAdvertisement.cend()) {
-      continue;
-    }
-    const ChannelAdvertisement& nopChannelAdvertisement =
-        nopChannelAdvertisementIter->second;
-    const std::string& domainDescriptor =
-        nopChannelAdvertisement.domainDescriptor;
-    if (!channelContext.canCommunicateWithRemote(domainDescriptor)) {
-      continue;
-    }
+      const auto nopChannelAdvertisementIter =
+          nopBrochure.channelAdvertisement.find(channelName);
+      if (nopChannelAdvertisementIter ==
+          nopBrochure.channelAdvertisement.cend()) {
+        continue;
+      }
+      const ChannelAdvertisement& nopChannelAdvertisement =
+          nopChannelAdvertisementIter->second;
+      const std::string& domainDescriptor =
+          nopChannelAdvertisement.domainDescriptor;
+      if (!channelContext.canCommunicateWithRemote(domainDescriptor)) {
+        continue;
+      }
 
-    const size_t numConnectionsNeeded = channelContext.numConnectionsNeeded();
-    auto& channelRegistrationIds = channelRegistrationIds_[channelName];
-    channelRegistrationIds.resize(numConnectionsNeeded);
-    auto& channelReceivedConnections = channelReceivedConnections_[channelName];
-    channelReceivedConnections.resize(numConnectionsNeeded);
-    for (size_t connId = 0; connId < numConnectionsNeeded; ++connId) {
-      TP_VLOG(3) << "Pipe " << id_ << " is requesting connection " << connId
-                 << "/" << numConnectionsNeeded << " (for channel "
-                 << channelName << ")";
-      uint64_t token = listener_->registerConnectionRequest(callbackWrapper_(
-          [channelName, connId, numConnectionsNeeded](
-              PipeImpl& impl,
-              std::string transport,
-              std::shared_ptr<transport::Connection> connection) {
-            TP_VLOG(3) << "Pipe " << impl.id_ << " done requesting connection "
-                       << connId << "/" << numConnectionsNeeded
-                       << " (for channel " << channelName << ")";
-            if (!impl.error_) {
-              impl.onAcceptWhileServerWaitingForChannel(
-                  channelName,
-                  connId,
-                  std::move(transport),
-                  std::move(connection));
-            }
-          }));
-      channelRegistrationIds[connId] = token;
-      needToWaitForConnections = true;
+      const size_t numConnectionsNeeded = channelContext.numConnectionsNeeded();
+      auto& channelRegistrationIds = channelRegistrationIds_[channelName];
+      channelRegistrationIds.resize(numConnectionsNeeded);
+      auto& channelReceivedConnections =
+          channelReceivedConnections_[channelName];
+      channelReceivedConnections.resize(numConnectionsNeeded);
+      for (size_t connId = 0; connId < numConnectionsNeeded; ++connId) {
+        TP_VLOG(3) << "Pipe " << id_ << " is requesting connection " << connId
+                   << "/" << numConnectionsNeeded << " (for channel "
+                   << channelName << ")";
+        uint64_t token = listener_->registerConnectionRequest(callbackWrapper_(
+            [channelName, connId, numConnectionsNeeded](
+                PipeImpl& impl,
+                std::string transport,
+                std::shared_ptr<transport::Connection> connection) {
+              TP_VLOG(3) << "Pipe " << impl.id_
+                         << " done requesting connection " << connId << "/"
+                         << numConnectionsNeeded << " (for channel "
+                         << channelName << ")";
+              if (!impl.error_) {
+                impl.onAcceptWhileServerWaitingForChannel(
+                    channelName,
+                    connId,
+                    std::move(transport),
+                    std::move(connection));
+              }
+            }));
+        channelRegistrationIds[connId] = token;
+        needToWaitForConnections = true;
+      }
+      ChannelSelection& nopChannelSelection =
+          nopBrochureAnswer.channelSelection[channelName];
+      nopChannelSelection.registrationIds = channelRegistrationIds;
+      nopChannelSelection.domainDescriptor = channelContext.domainDescriptor();
     }
-    ChannelSelection& nopChannelSelection =
-        nopBrochureAnswer.channelSelection[channelName];
-    nopChannelSelection.registrationIds = channelRegistrationIds;
-    nopChannelSelection.domainDescriptor = channelContext.domainDescriptor();
   }
 
   TP_VLOG(3) << "Pipe " << id_ << " is writing nop object (brochure answer)";
