@@ -285,12 +285,14 @@ class ChannelImpl final
 
   // Actions (i.e., methods that begin a state transition).
   // For send operations:
+  void recordSendCudaEvent(SendOpIter opIter);
   void writeDescriptor(SendOpIter opIter);
   void readReadyToReceive(SendOpIter opIter);
   void waitForSendCudaEvent(SendOpIter opIter);
   void sendOverIb(SendOpIter opIter);
   void callSendCallback(SendOpIter opIter);
   // For recv operations:
+  void recordRecvCudaEvent(RecvOpIter opIter);
   void readDescriptor(RecvOpIter opIter);
   void waitForRecvCudaEvent(RecvOpIter opIter);
   void recvOverIbAndWriteReadyToRecive(RecvOpIter opIter);

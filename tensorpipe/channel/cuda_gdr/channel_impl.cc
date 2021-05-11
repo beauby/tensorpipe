@@ -205,7 +205,6 @@ void ChannelImpl::sendImplFromLoop(
       std::move(callback),
       localGpuIdx,
       localNicIdx);
-  opIter->event.record(buffer.unwrap<CudaBuffer>().stream);
 
   sendOps_.advanceOperation(opIter);
 }
@@ -234,7 +233,9 @@ void ChannelImpl::advanceSendOperation(
       /*cond=*/!error_ && state_ == ESTABLISHED &&
           prevOpState >= SendOperation::READING_READY_TO_RECEIVE,
       /*actions=*/
-      {&ChannelImpl::writeDescriptor, &ChannelImpl::readReadyToReceive});
+      {&ChannelImpl::recordSendCudaEvent,
+       &ChannelImpl::writeDescriptor,
+       &ChannelImpl::readReadyToReceive});
 
   sendOps_.attemptTransition(
       opIter,
@@ -277,6 +278,12 @@ void ChannelImpl::advanceSendOperation(
       /*to=*/SendOperation::FINISHED,
       /*cond=*/op.numChunksBeingSent == 0,
       /*actions=*/{&ChannelImpl::callSendCallback});
+}
+
+void ChannelImpl::recordSendCudaEvent(SendOpIter opIter) {
+  TP_DCHECK(context_->inLoop());
+
+  opIter->event.record(opIter->buffer.stream);
 }
 
 void ChannelImpl::writeDescriptor(SendOpIter opIter) {
@@ -408,7 +415,6 @@ void ChannelImpl::recvImplFromLoop(
       std::move(callback),
       localGpuIdx,
       localNicIdx);
-  opIter->event.record(buffer.unwrap<CudaBuffer>().stream);
 
   recvOps_.advanceOperation(opIter);
 }
@@ -435,7 +441,8 @@ void ChannelImpl::advanceRecvOperation(
       /*to=*/RecvOperation::READING_DESCRIPTOR,
       /*cond=*/!error_ && state_ == ESTABLISHED &&
           prevOpState >= RecvOperation::READING_DESCRIPTOR,
-      /*actions=*/{&ChannelImpl::readDescriptor});
+      /*actions=*/
+      {&ChannelImpl::recordRecvCudaEvent, &ChannelImpl::readDescriptor});
 
   recvOps_.attemptTransition(
       opIter,
@@ -481,6 +488,12 @@ void ChannelImpl::advanceRecvOperation(
       /*actions=*/{&ChannelImpl::callRecvCallback});
 }
 
+void ChannelImpl::recordRecvCudaEvent(RecvOpIter opIter) {
+  TP_DCHECK(context_->inLoop());
+
+  opIter->event.record(opIter->buffer.stream);
+}
+
 void ChannelImpl::readDescriptor(RecvOpIter opIter) {
   TP_DCHECK(context_->inLoop());
 
@@ -502,134 +515,134 @@ void ChannelImpl::readDescriptor(RecvOpIter opIter) {
       }));
 }
 
-void ChannelImpl::waitForRecvCudaEvent(RecvOpIter opIter) {
-  TP_DCHECK(context_->inLoop());
+  void ChannelImpl::waitForRecvCudaEvent(RecvOpIter opIter) {
+    TP_DCHECK(context_->inLoop());
 
-  RecvOperation& op = *opIter;
+    RecvOperation& op = *opIter;
 
-  TP_VLOG(6) << "Channel " << id_ << " is waiting for CUDA event to recv (#"
-             << op.sequenceNumber << ")";
-  context_->waitForCudaEvent(
-      op.event, callbackWrapper_([opIter](ChannelImpl& impl) {
-        TP_VLOG(6) << "Channel " << impl.id_
-                   << " done waiting for CUDA event to recv (# "
-                   << opIter->sequenceNumber << ")";
-        opIter->doneWaitingForCudaEvent = true;
-        impl.recvOps_.advanceOperation(opIter);
-      }));
-}
-
-void ChannelImpl::recvOverIbAndWriteReadyToRecive(RecvOpIter opIter) {
-  TP_DCHECK(context_->inLoop());
-
-  RecvOperation& op = *opIter;
-
-  IbvNic& localNic = context_->getIbvNic(op.localNicIdx);
-  IbvQueuePair& qp = queuePairs_[op.localNicIdx][op.remoteNicIdx].queuePair;
-  size_t chunkSize =
-      queuePairs_[op.localNicIdx][op.remoteNicIdx].maximumMessageSize;
-
-  // This could be VEEERY slow the first time we encounter the buffer, but the
-  // result will be cached and subsequent calls will be much faster.
-  IbvMemoryRegion& mr = localNic.registerMemory(op.buffer);
-
-  size_t numChunks = ceilOfRatio(op.length, chunkSize);
-  for (size_t chunkIdx = 0; chunkIdx < numChunks; chunkIdx++) {
-    IbvLib::sge list;
-    list.addr = reinterpret_cast<uint64_t>(
-        reinterpret_cast<uint8_t*>(op.buffer.ptr) + chunkIdx * chunkSize);
-    list.length = std::min(op.length - chunkIdx * chunkSize, chunkSize);
-    list.lkey = mr->lkey;
-
-    IbvLib::recv_wr wr;
-    std::memset(&wr, 0, sizeof(wr));
-    wr.sg_list = &list;
-    wr.num_sge = 1;
-
-    TP_VLOG(6) << "Channel " << id_ << " is receiving chunk #" << chunkIdx
-               << " (out of " << numChunks << ") of tensor #"
-               << op.sequenceNumber << " on QP " << qp->qp_num;
-    localNic.postRecv(
-        qp, wr, callbackWrapper_([opIter, chunkIdx](ChannelImpl& impl) {
-          TP_VLOG(6) << "Channel " << impl.id_ << " done receiving chunk #"
-                     << chunkIdx << " of tensor #" << opIter->sequenceNumber;
-          opIter->numChunksBeingReceived--;
+    TP_VLOG(6) << "Channel " << id_ << " is waiting for CUDA event to recv (#"
+               << op.sequenceNumber << ")";
+    context_->waitForCudaEvent(
+        op.event, callbackWrapper_([opIter](ChannelImpl& impl) {
+          TP_VLOG(6) << "Channel " << impl.id_
+                     << " done waiting for CUDA event to recv (# "
+                     << opIter->sequenceNumber << ")";
+          opIter->doneWaitingForCudaEvent = true;
           impl.recvOps_.advanceOperation(opIter);
-
-          impl.numRecvsInFlight_--;
-          impl.tryCleanup();
         }));
-    op.numChunksBeingReceived++;
-    numRecvsInFlight_++;
   }
 
-  auto nopHolderOut = std::make_shared<NopHolder<ReadyToReceive>>();
-  ReadyToReceive& nopReadyToReceive = nopHolderOut->getObject();
-  nopReadyToReceive.destinationNicIdx = op.localNicIdx;
-  TP_VLOG(6) << "Channel " << id_ << " is writing ready-to-receive (#"
-             << op.sequenceNumber << ")";
-  readyToReceiveConnection_->write(
-      *nopHolderOut,
-      callbackWrapper_([sequenceNumber{opIter->sequenceNumber},
-                        nopHolderOut](ChannelImpl& impl) {
-        TP_VLOG(6) << "Channel " << impl.id_
-                   << " done writing ready-to-receive (#" << sequenceNumber
-                   << ")";
-      }));
-}
+  void ChannelImpl::recvOverIbAndWriteReadyToRecive(RecvOpIter opIter) {
+    TP_DCHECK(context_->inLoop());
 
-void ChannelImpl::callRecvCallback(RecvOpIter opIter) {
-  TP_DCHECK(context_->inLoop());
+    RecvOperation& op = *opIter;
 
-  RecvOperation& op = *opIter;
+    IbvNic& localNic = context_->getIbvNic(op.localNicIdx);
+    IbvQueuePair& qp = queuePairs_[op.localNicIdx][op.remoteNicIdx].queuePair;
+    size_t chunkSize =
+        queuePairs_[op.localNicIdx][op.remoteNicIdx].maximumMessageSize;
 
-  op.callback(error_);
-  // Reset callback to release the resources it was holding.
-  op.callback = nullptr;
-}
+    // This could be VEEERY slow the first time we encounter the buffer, but the
+    // result will be cached and subsequent calls will be much faster.
+    IbvMemoryRegion& mr = localNic.registerMemory(op.buffer);
 
-void ChannelImpl::handleErrorImpl() {
-  sendOps_.advanceAllOperations();
-  recvOps_.advanceAllOperations();
+    size_t numChunks = ceilOfRatio(op.length, chunkSize);
+    for (size_t chunkIdx = 0; chunkIdx < numChunks; chunkIdx++) {
+      IbvLib::sge list;
+      list.addr = reinterpret_cast<uint64_t>(
+          reinterpret_cast<uint8_t*>(op.buffer.ptr) + chunkIdx * chunkSize);
+      list.length = std::min(op.length - chunkIdx * chunkSize, chunkSize);
+      list.lkey = mr->lkey;
 
-  for (size_t localNicIdx = 0; localNicIdx < numLocalNics_; localNicIdx++) {
-    for (size_t remoteNicIdx = 0; remoteNicIdx < numRemoteNics_;
-         remoteNicIdx++) {
-      transitionIbvQueuePairToError(
-          context_->getIbvLib(),
-          queuePairs_[localNicIdx][remoteNicIdx].queuePair);
+      IbvLib::recv_wr wr;
+      std::memset(&wr, 0, sizeof(wr));
+      wr.sg_list = &list;
+      wr.num_sge = 1;
+
+      TP_VLOG(6) << "Channel " << id_ << " is receiving chunk #" << chunkIdx
+                 << " (out of " << numChunks << ") of tensor #"
+                 << op.sequenceNumber << " on QP " << qp->qp_num;
+      localNic.postRecv(
+          qp, wr, callbackWrapper_([opIter, chunkIdx](ChannelImpl& impl) {
+            TP_VLOG(6) << "Channel " << impl.id_ << " done receiving chunk #"
+                       << chunkIdx << " of tensor #" << opIter->sequenceNumber;
+            opIter->numChunksBeingReceived--;
+            impl.recvOps_.advanceOperation(opIter);
+
+            impl.numRecvsInFlight_--;
+            impl.tryCleanup();
+          }));
+      op.numChunksBeingReceived++;
+      numRecvsInFlight_++;
+    }
+
+    auto nopHolderOut = std::make_shared<NopHolder<ReadyToReceive>>();
+    ReadyToReceive& nopReadyToReceive = nopHolderOut->getObject();
+    nopReadyToReceive.destinationNicIdx = op.localNicIdx;
+    TP_VLOG(6) << "Channel " << id_ << " is writing ready-to-receive (#"
+               << op.sequenceNumber << ")";
+    readyToReceiveConnection_->write(
+        *nopHolderOut,
+        callbackWrapper_([sequenceNumber{opIter->sequenceNumber},
+                          nopHolderOut](ChannelImpl& impl) {
+          TP_VLOG(6) << "Channel " << impl.id_
+                     << " done writing ready-to-receive (#" << sequenceNumber
+                     << ")";
+        }));
+  }
+
+  void ChannelImpl::callRecvCallback(RecvOpIter opIter) {
+    TP_DCHECK(context_->inLoop());
+
+    RecvOperation& op = *opIter;
+
+    op.callback(error_);
+    // Reset callback to release the resources it was holding.
+    op.callback = nullptr;
+  }
+
+  void ChannelImpl::handleErrorImpl() {
+    sendOps_.advanceAllOperations();
+    recvOps_.advanceAllOperations();
+
+    for (size_t localNicIdx = 0; localNicIdx < numLocalNics_; localNicIdx++) {
+      for (size_t remoteNicIdx = 0; remoteNicIdx < numRemoteNics_;
+           remoteNicIdx++) {
+        transitionIbvQueuePairToError(
+            context_->getIbvLib(),
+            queuePairs_[localNicIdx][remoteNicIdx].queuePair);
+      }
+    }
+
+    tryCleanup();
+
+    descriptorConnection_->close();
+    readyToReceiveConnection_->close();
+  }
+
+  void ChannelImpl::tryCleanup() {
+    TP_DCHECK(context_->inLoop());
+
+    if (error_) {
+      if (numSendsInFlight_ == 0 && numRecvsInFlight_ == 0) {
+        cleanup();
+      } else {
+        TP_VLOG(9) << "Connection " << id_
+                   << " cannot proceed to cleanup because it has "
+                   << numSendsInFlight_ << " pending send requests and "
+                   << numRecvsInFlight_ << " pending recv requests";
+      }
     }
   }
 
-  tryCleanup();
+  void ChannelImpl::cleanup() {
+    TP_DCHECK(context_->inLoop());
+    TP_VLOG(8) << "Connection " << id_ << " is cleaning up";
 
-  descriptorConnection_->close();
-  readyToReceiveConnection_->close();
-}
+    queuePairs_.clear();
 
-void ChannelImpl::tryCleanup() {
-  TP_DCHECK(context_->inLoop());
-
-  if (error_) {
-    if (numSendsInFlight_ == 0 && numRecvsInFlight_ == 0) {
-      cleanup();
-    } else {
-      TP_VLOG(9) << "Connection " << id_
-                 << " cannot proceed to cleanup because it has "
-                 << numSendsInFlight_ << " pending send requests and "
-                 << numRecvsInFlight_ << " pending recv requests";
-    }
+    context_->unenroll(*this);
   }
-}
-
-void ChannelImpl::cleanup() {
-  TP_DCHECK(context_->inLoop());
-  TP_VLOG(8) << "Connection " << id_ << " is cleaning up";
-
-  queuePairs_.clear();
-
-  context_->unenroll(*this);
-}
 
 } // namespace cuda_gdr
 } // namespace channel
